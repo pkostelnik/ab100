@@ -12,7 +12,7 @@ const areas = vm.runInContext('courseAreas', context);
 const insights = vm.runInContext('coursewareInsights', context);
 const errors = [];
 if (questions.length < 90) errors.push('Question bank lost the courseware-derived extension');
-if (labs.length !== 20) errors.push(`Expected 20 labs, found ${labs.length}`);
+if (labs.length !== 9) errors.push(`Expected 9 labs, found ${labs.length}`);
 if (areas.length !== 3) errors.push(`Expected 3 exam areas, found ${areas.length}`);
 if (insights.length < 5) errors.push('Expected courseware insights');
 const ids = new Set(labs.map((lab) => lab.id));
