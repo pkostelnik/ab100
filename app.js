@@ -168,6 +168,6 @@ document.querySelectorAll('[data-mode]').forEach((button) => button.addEventList
 }));
 $('#search').addEventListener('input', (event) => { state.query = event.target.value; state.areaId = 'all'; state.mode = 'learn'; state.index = 0; render(); });
 $('#topic-filter').addEventListener('change', (event) => { state.topic = event.target.value; state.areaId = 'all'; state.mode = 'learn'; state.index = 0; render(); });
-$('#reset-progress').addEventListener('click', () => { if (confirm('Reset all local progress?')) { state.answers = {}; save(); render(); } });
+$('#reset-progress').addEventListener('click', () => { if (confirm('Reset all local progress?')) { state.answers = {}; Object.keys(labProgress).forEach((key) => { delete labProgress[key]; }); saveLabs(); renderLabs(); save(); render(); } });
 setInterval(renderExamStatus, 1000);
 applyLanguage(state.language);
