@@ -1,146 +1,1166 @@
-const source = {
-  grounding: ['Requirements & Grounding', 'https://learn.microsoft.com/en-us/training/modules/analyze-requirements-ai-powered-business-solutions/'],
-  strategy: ['AI Strategy & CAF', 'https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/ai/'],
-  roi: ['ROI & Build-Buy-Extend', 'https://learn.microsoft.com/en-us/training/modules/evaluate-costs-benefits-ai-powered-business-solution/'],
-  d365: ['Copilot in Dynamics 365', 'https://learn.microsoft.com/en-us/dynamics365/copilot/ai-get-started'],
-  studio: ['Copilot Studio Agents', 'https://learn.microsoft.com/en-us/microsoft-copilot-studio/'],
-  foundry: ['Foundry & Extensibility', 'https://learn.microsoft.com/en-us/azure/ai-foundry/'],
-  eco: ['Ecosystem Integration', 'https://learn.microsoft.com/en-us/training/modules/orchestrate-configuration-prebuilt-agents-apps/'],
-  monitor: ['Monitor & Tune', 'https://learn.microsoft.com/en-us/training/modules/analyze-monitor-tune-ai-powered-business-solutions/'],
-  test: ['Testing & Evaluation', 'https://learn.microsoft.com/en-us/training/modules/manage-testing-ai-powered-business-solutions/'],
-  alm: ['ALM & Environments', 'https://learn.microsoft.com/en-us/power-platform/alm/'],
-  rai: ['Responsible AI & Security', 'https://learn.microsoft.com/en-us/training/modules/design-responsible-ai-security-governance-risk-management-compliance/']
-};
-const q = (question, options, answer, explanation, key, extra = {}) => ({ question, options, answer, explanation, topic: source[key][0], source: extra.source || source[key][1], official: false, ...extra });
-const community = (question, options, answer, explanation, topic, post, format = 'single', extra = {}) => ({ question, options, answer, explanation, topic, source: `https://thedatacommunity.org/?p=${post}`, sourceType: 'The Data Community practice', verification: 'Cross-checked against Microsoft Learn; unofficial practice content', format, ...extra });
-const official = (question, options, answer, explanation, key, extra = {}) => q(question, options, answer, explanation, key, { official: true, sourceType: 'Microsoft Learn', verification: 'Official Microsoft Learn aligned', ...extra });
-const c1756 = (slug) => `https://github.com/tertiarycourses/C1756-AB-100-Microsoft-Certified-Agentic-AI-Business-Solutions-Architect/blob/main/labs/${slug}`;
-const courseware = (question, options, answer, explanation, key, slug, extra = {}) => q(question, options, answer, explanation, key, { sourceType: 'Courseware-derived', verification: 'Courseware-derived; verify against Microsoft Learn', coursewareSource: c1756(slug), labIds: [slug.slice(0, 6)], ...extra });
-
-const dumpsbase = [
-  q("Contoso listed several foundation models in Microsoft Foundry. Leadership treats that list as proof the solution is ready for production. What should the architect clarify?", ["The catalog is only for open-source models and cannot host Azure-sold models.","Any model visible in the catalog is already approved for customer-facing workloads.","Listing a model in the catalog replaces Responsible AI review.","The catalog is a discovery surface; production use still needs a scenario-specific evaluation quality gate."], 3, "Foundry Models is for discovering, comparing, and deploying candidates. Readiness is a separate GenAIOps evaluation against the business task, safety bar, and ground-truth set.", "foundry", { source: "https://learn.microsoft.com/en-us/azure/foundry/concepts/foundry-models-overview" }),
-  q("A service representative must ask a helper to summarize the open case. Overnight invoice exceptions should start when mail arrives, without a chat turn. How should those agents be bounded?", ["A Foundry catalog entry for the chat skill and a Power BI alert for invoices.","Two autonomous agents, because any Dynamics 365 skill must run unattended.","One classic topic for both, because triggers and events are interchangeable.","Interactive task help versus an event-triggered autonomous agent with a defined authority limit."], 3, "Task agents wait for a user turn. Autonomous agents perceive events and act inside scoped permissions, with human approval on high-impact steps.", "studio", { source: "https://learn.microsoft.com/en-us/microsoft-copilot-studio/guidance/autonomous-agents" }),
-  q("Sellers at Contoso say “coverage gap” when they mean a custom opportunity column. Copilot in Dynamics 365 Sales keeps querying the wrong field. What should be designed first?", ["A glossary or synonym that maps the business phrase to the Dataverse column used by Copilot.","A public website knowledge source for CRM slang.","A Computer Use session that clicks through the opportunity form.","A new Foundry fine-tune that memorizes every seller nickname."], 0, "Copilot in Sales can be taught organization language through glossary and synonym mappings so chat binds to the correct table columns.", "d365", { source: "https://learn.microsoft.com/en-us/dynamics365/sales/extend-copilot-chat" }),
-  q("Match each Contoso building block to the role it should play.", ["Foundry custom model","Prebuilt Dynamics 365 agent","MCP connection","Custom Copilot Studio agent"], 0, "Start with in-app agents, extend in Studio when process logic is unique, use MCP for tool and resource contracts, and reserve custom models for gaps the catalog cannot cover.", "eco", { format: "matching", matches: { "0": "D", "1": "A", "2": "C", "3": "B" }, matchLabels: ["A. Turn on a product skill that already fits the process","B. Author topics, tools, and orchestration for a unique flow","C. Expose an external tool or local resource through an open protocol","D. Train or host a model when prebuilt models miss the domain"] }),
-  q("After the first production week, Contoso wants session outcomes, engagement, and satisfaction for a Copilot Studio agent. Which starting point matches the platform?", ["Azure DevOps sprint burndown for the maker team.","Copilot Studio analytics and agent-health views that report outcomes such as resolved, escalated, and abandoned.","Export every transcript into a global variable and chart it in Excel.","The Foundry model catalog leaderboard, because it already includes tenant CSAT."], 1, "Studio exposes conversation and autonomous-run analytics so architects can see engagement, outcomes, and satisfaction without building a parallel warehouse first.", "monitor", { source: "https://learn.microsoft.com/en-us/microsoft-copilot-studio/analytics-improve-agent-health" }),
-  q("Finance asked for an accounts-payable invoice copilot. Which operating role is appropriate?", ["Store vendor bank details in the chat transcript so the model can “remember” them.","Auto-post every extracted invoice and wire payment the same night.","Draft and classify incoming vendor invoices and pause for a supervisor before posting or unblocking a vendor.","Replace the general ledger with generated journal text."], 2, "Invoice agents extract and draft; supervisors confirm vendors, coding, and exceptions. Autonomous payment or vendor unblocking is outside a safe first envelope.", "d365", { source: "https://learn.microsoft.com/en-us/dynamics365/business-central/payables-agent" }),
-  q("Risk wants a Responsible AI dashboard for customer-facing agents. Which content belongs there?", ["Safety and quality evaluations, fairness or drift signals, and completeness of audit trails for model and data changes.","A list of catalog model names with no evaluation scores.","Only token spend and the number of makers with Studio licenses.","The marketing slogan used in the launch email."], 0, "Responsible AI operations track evaluation quality, safety, and auditability. Cost and licensing are useful but they are not the RAI control plane.", "rai"),
-  q("A Copilot Studio case agent and an X++ pricing extension must both reach test next month. Which ALM statement is correct?", ["Skip solutions and copy the agent JSON into the AOT project.","Put both artifacts only in the Foundry model catalog.","The Studio agent travels in a Dataverse solution and Power Platform pipeline; the X++ change follows finance and operations ALM, not the same solution package.","Export the X++ project into the Studio canvas and ship both as one unmanaged topic."], 2, "Copilot Studio components are solution-aware on Dataverse. Finance and operations customizations have a separate ALM path. Do not force them into one carrier.", "alm", { source: "https://learn.microsoft.com/en-us/power-platform/alm/overview-alm" }),
-  q("Contoso must promote a Studio agent and a Foundry model deployment. Which pipeline split is defensible?", ["SharePoint folder drop as the only release mechanism.","Power Platform pipelines or Build Tools for the solution-aware agent; Foundry and Azure DevOps for model evaluation and deployment.","A single X++ deployable package for both.","Manual copy-paste of connection strings in production."], 1, "Studio ALM rides Power Platform solutions and pipelines. Foundry models and agents need their own evaluation and deployment process. The strategies must align, not collapse.", "alm", { source: "https://learn.microsoft.com/en-us/microsoft-copilot-studio/guidance/alm" }),
-  q("A Dynamics 365 Contact Center voice agent should not keep talking when the caller asks for a person or confidence drops. What should the design specify?", ["Restart the same topic until the model invents an answer.","An explicit transfer to a representative with conversation context, not a silent hang-up or a brand-new unauthenticated chat.","Email the transcript to a shared mailbox and end the call.","Switch the channel to SMS without telling the caller."], 1, "Contact Center designs include escalation and transfer paths so humans receive context. Low-confidence loops and dropped sessions are not a handoff.", "d365"),
-  q("Grounding files include unpublished contracts. Security asked whether Microsoft Purview or Microsoft Defender is “the AI control.” What should the architect assign?", ["Purview for classification, DLP, and residency of grounding data; Defender for identity and endpoint threat protection. Use both.","Purview only, because prompt attacks are a document-labeling problem.","Defender only, because DLP is not relevant to agents.","Neither; store the contracts in a public website knowledge source."], 0, "Data governance and threat protection are complementary. Grounding access and residency sit with Purview-style controls; runtime and identity attacks sit with Defender-style controls.", "rai"),
-  q("The cloud strategy team follows the Cloud Adoption Framework. The Dynamics program follows Success by Design. How should those frameworks be used together?", ["Replace Success by Design with CAF for every Solution Blueprint Review.","Treat them as interchangeable names for the same workshop.","Replace CAF with Success by Design for every Azure landing zone.","CAF for enterprise AI and cloud adoption; Success by Design for Dynamics 365 and Power Platform implementation reviews and blueprints."], 3, "CAF’s AI scenario guides adoption strategy. Success by Design is prescriptive Dynamics implementation guidance. AB-100 expects both, used at different altitudes.", "strategy", { source: "https://learn.microsoft.com/en-us/dynamics365/guidance/implementation-guide/success-by-design" }),
-  q("Customer, case, and knowledge records already live in Dataverse. Three agents each copied a weekly CSV into their own prompt library. What should change?", ["Merge the CSVs into one global conversation variable.","Keep Dataverse as the system of record and ground the agents there instead of forking stale extracts.","Move the system of record into the Foundry catalog card.","Disable Dataverse because agents cannot use business-application data."], 1, "Dataverse is the shared store for Dynamics and Copilot Studio artifacts. Copies inside prompts drift and break permissions.", "grounding", { source: "https://learn.microsoft.com/en-us/power-apps/maker/data-platform/data-platform-intro" }),
-  q("Finance scored the agent only on first-year license avoidance. What ROI framing should the architect add?", ["Ignore TCO and report only tokens saved in week one.","Horizon-based value: near-term efficiency, mid-term process change, and longer-term options, with total cost of ownership, not license line items alone.","Count every hallucinated answer as a benefit because it is “automation.”","Delay any ROI model until the model catalog has 10,000 entries."], 1, "AB-100 asks for ROI and TCO, including build-buy-extend. Horizon thinking stops a one-year license comparison from hiding change, risk, and operating cost.", "roi"),
-  q("Users ask one utterance that needs a policy lookup and a ticket update. Classic trigger phrases keep firing a single topic. Which orchestration change fits?", ["Disable tools so the model answers from memory only.","Add 200 near-duplicate trigger phrases to the same topic.","Replace the agent with a static FAQ page.","Turn on generative orchestration so the planner can chain knowledge, topics, and tools for multi-intent turns."], 3, "Generative orchestration is the default planner for multi-intent chaining. Classic NLU is single-intent and needs more handcrafted topics.", "studio", { source: "https://learn.microsoft.com/en-us/microsoft-copilot-studio/guidance/generative-orchestration" }),
-  q("Match each language-understanding option to the situation that justifies it.", ["Generative orchestration","Azure Conversational Language Understanding","Built-in classic NLU"], 0, "Classic NLU fits simple trigger-phrase topics. CLU is for custom, often multilingual or industry models that must stay in sync with topics. Generative orchestration plans across topics, tools, and knowledge.", "studio", { source: "https://learn.microsoft.com/en-us/microsoft-copilot-studio/guidance/language-understanding", format: "matching", matches: { "0": "C", "1": "B", "2": "A" }, matchLabels: ["A. Small topic set with short trigger phrases","B. Custom intents, industry vocabulary, or extra language coverage","C. Multi-intent utterances that should chain tools and knowledge"] }),
-  q("A proposed knowledge corpus is complete but six months stale, and row-level permissions are unknown. What is the first grounding decision?", ["Fine-tune a model on the stale extract and skip retrieval.","Connect it immediately because volume is more important than recency.","Upload it to a public website to “open” the permissions.","Treat the source as not ready until freshness, permission trimming, and accuracy are confirmed."], 3, "AB-100 requires reviewing grounding data for accuracy, relevance, timeliness, cleanliness, and availability, including who may see it.", "grounding"),
-  q("Contoso can buy a prebuilt service copilot, extend it with Studio topics, or build a Foundry agent from scratch. Which test should drive the choice?", ["Choose whichever demo used the longest prompt.","Whether the prebuilt skill covers the process; extend when a gap is bounded; build custom only when control, data, or model needs exceed extend.","Always build custom so the catalog is unused.","Always buy and never add knowledge or tools."], 1, "Build, buy, or extend is an explicit AB-100 skill. Prefer product capabilities, extend for bounded gaps, and custom-build when the gap is architectural.", "roi"),
-  q("Which TWO signals justify creating a custom or small language model instead of a catalog foundation model?", ["The maker prefers a unique model name on a slide.","The catalog already meets quality, safety, and latency bars.","Need for a compact, specialized model with documented cost or latency benefits.","A regulated domain that catalog models cannot meet after evaluation."], [2, 3], "Custom models are justified by unmet quality, domain, cost, or latency needs after evaluation. Preference and already-sufficient catalog models are not.", "foundry", { source: "https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ab-100", format: "multiple" }),
-  q("The AI Center of Excellence asked for a prompt library. What belongs in the standard?", ["One giant system prompt that every agent must paste verbatim, including secrets.","A shared mailbox of unreviewed screenshots.","A rule that prompts may never be tested.","Approved patterns, grounding rules, review owners, and versioning so prompts are reusable assets, not private chat snippets."], 3, "AB-100 includes prompt-library and prompt-engineering guidelines. Treat prompts as governed, versioned assets.", "strategy", { source: "https://learn.microsoft.com/en-us/training/modules/design-overall-ai-strategy-business-solutions/" }),
-  q("An internal FAQ over SharePoint should stay inside Microsoft 365 permissions. A multi-step approval that writes to Dataverse will be used by a department. Which platform split fits?", ["Public anonymous Web Chat for both so authentication is skipped.","Foundry Computer Use for both, with no identity.","A Microsoft 365 Copilot declarative helper for the FAQ; a Copilot Studio agent for the governed business process.","Studio only for the FAQ and M365 Copilot only for the Dataverse write path."], 2, "M365 Copilot suits permission-trimmed organizational Q&A. Studio is the path for multi-step business systems, connectors, and enterprise ALM.", "eco", { source: "https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/copilot-studio-experience" }),
-  q("A line-of-business desktop app has no API. The agent must complete a weekly status form. What extensibility option is in scope?", ["Computer Use against a locked-down machine, with least privilege and confirmation on destructive steps.","Store the UI password in a topic message.","Import the EXE as a Dataverse table.","MCP packet capture on the corporate firewall."], 0, "Computer Use is the Copilot Studio path when the only interface is a UI. Isolation and human confirmation are part of the design, not optional decoration.", "foundry", { source: "https://learn.microsoft.com/en-us/microsoft-copilot-studio/guidance/ai-capabilities" }),
-  q("A local diagnostic utility already speaks the open tool protocol for models. How should Copilot Studio consume it?", ["A2A, because every local process is an agent.","Paste the tool output into the system prompt weekly.","An MCP tool connection, after authentication, scope, and DLP review.","Disable DLP so the utility can call any connector."], 2, "MCP standardizes tool and resource access. Discovery does not skip governance of auth, scope, and data policy.", "foundry", { source: "https://learn.microsoft.com/en-us/microsoft-copilot-studio/" }),
-  q("A specialized Foundry agent must keep multi-turn diagnosis state while the Studio front door handles the employee. Which collaboration style matches?", ["Agent-to-agent delegation with a clear contract, identity, and correlation across traces.","Ask the employee to retype the case in both agents.","Copy the Foundry weights into a Studio topic variable.","A single stateless HTTP POST that drops history."], 0, "A2A is the open pattern for agent collaboration. The design still needs trust boundaries, observability, and a task contract.", "eco", { source: "https://learn.microsoft.com/en-us/microsoft-copilot-studio/add-agent-agent-to-agent" }),
-  q("Inference cost swings wildly because every request hits the largest deployed model. Which AB-100 lever should be designed?", ["Route by the maker’s favorite model name.","A model router that sends each request to the smallest suitable model that still meets the quality bar.","Turn evaluation off so routing has no metrics.","Pin every skill to the most expensive deployment “to be safe.”"], 1, "The study guide includes implementing a model router so cost and quality can be balanced per request type.", "roi", { source: "https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ab-100" }),
-  q("A test set scores high on intent recognition and low on groundedness. What should be inspected first?", ["The number of environments in the tenant.","The footer font on the Adaptive Card.","Whether the agent has a nickname.","Knowledge sources, citations, and whether ungrounded answers are allowed."], 3, "The agent understands the ask but is not sufficiently tied to approved sources. That is a grounding and evaluation problem, not a branding problem.", "test", { source: "https://learn.microsoft.com/en-us/microsoft-copilot-studio/nlu-overview" }),
-  q("The solution spans Customer Service cases and Finance invoice status. What should the test strategy include?", ["Only a single-topic trigger-phrase quiz in Studio.","End-to-end scenarios that cross both apps, plus contract tests at each integration boundary.","Only a Foundry catalog browse with no business data.","Skip tests because each app has its own Copilot."], 1, "AB-100 calls for end-to-end tests of AI solutions that use multiple Dynamics 365 apps, not isolated demos.", "test"),
-  q("Which environment pattern should carry a Studio agent from first build to production?", ["Separate development, test, and production environments with solutions, environment variables, and connection references.","One production environment that every maker edits live.","No Dataverse database, so solutions cannot be used.","A personal developer environment as the only production host."], 0, "Power Platform ALM needs Dataverse, solutions, and environment-specific configuration. Live-editing production is not an environment strategy.", "alm", { source: "https://learn.microsoft.com/en-us/microsoft-copilot-studio/guidance/alm" }),
-  q("Who should be able to change grounding documents and model-tuning sets?", ["No one, because grounding data must be immutable forever.","The agent’s service principal with owner rights on the whole tenant.","A least-privilege group with audit trails; not every maker and not the conversational identity of the agent.","Any authenticated website visitor."], 2, "AB-100 includes access control on grounding data and model tuning, plus audit trails for those changes.", "rai"),
-  q("Red-team notes show users can override policy by saying “ignore your instructions.” What belongs in the design?", ["Input checks, grounded refusal, scoped tools, and monitoring for prompt-manipulation attempts.","Granting the agent broader write tools so it can “fight back.”","Disabling transcripts so attacks cannot be reviewed.","A longer marketing disclaimer in the greeting topic only."], 0, "Prompt manipulation is an explicit exam skill. Mitigations are technical and operational, not a banner in the greeting.", "rai", { source: "https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ab-100" }),
-  q("Operations has telemetry but no tuning loop. Which use of that telemetry is correct?", ["Delete low-scoring sessions to improve the average.","Increase autonomy whenever latency rises.","Interpret quality, latency, and failure traces, then change prompts, tools, or models against a baseline.","Archive traces unread so the dashboard stays green."], 2, "Monitoring exists to tune behavior. Vanity cleanup and unearned autonomy are not tuning.", "monitor"),
-  q("Product backlog comments say the agent “sounds confident but cites last year’s policy.” Where should that feedback land?", ["In the analysis of agent usage and the knowledge-freshness backlog, then into a tuned source or prompt.","Only as a new trigger phrase that repeats the old policy.","Only in the brand-tone guide.","Ignore qualitative feedback because only token charts matter."], 0, "AB-100 includes analyzing backlog and user feedback of AI and agent usage, not only infrastructure metrics.", "monitor"),
-  q("Finance and operations users need in-app help that can see extra procedure manuals. What should the architect propose?", ["Store the manuals only in a maker’s OneDrive.","Disable in-app help and rely on hallway training.","Email the manuals to each user weekly.","The documented process for adding knowledge sources to in-app help and guidance, rather than a shadow chatbot with a copied manual."], 3, "The study guide calls out adding knowledge to in-app help and guidance for Finance and Supply Chain apps.", "d365", { source: "https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ab-100" }),
-  q("Sales Copilot must read a line-of-business pricing API that has no first-party connector. What design is appropriate?", ["Hard-code an API key in a topic message.","Scrape the vendor website with Computer Use for every quote.","A connector or custom connector with least-privilege auth, designed for Copilot in Dynamics 365 Sales—not a password typed in chat.","Turn off authentication because sellers are busy."], 2, "Designing connectors for Copilot in Dynamics 365 Sales is an exam skill. Credentials do not belong in conversation text.", "d365", { source: "https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ab-100" }),
-  q("Which TWO practices belong in the release quality gate for a custom Foundry model?", ["Ship when the catalog page has a logo.","Evaluation against a labeled scenario set for quality and safety.","Compare the candidate to the current production baseline.","Skip human review if latency improved."], [1, 2], "Custom-model validation is an AB-100 testing skill. A catalog page and a single latency win are not a gate.", "test", { source: "https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/observability", format: "multiple" }),
-  q("Match each framework or control to the decision it should own.", ["Microsoft Purview","Success by Design","Microsoft Defender","Cloud Adoption Framework AI scenario"], 0, "Keep adoption strategy, Dynamics implementation guidance, data governance, and threat protection on the control that is built for that job.", "strategy", { format: "matching", matches: { "0": "C", "1": "B", "2": "D", "3": "A" }, matchLabels: ["A. Enterprise AI adoption and landing-zone alignment","B. Dynamics 365 implementation reviews and living blueprint","C. Classification, DLP, and residency of grounding data","D. Identity and endpoint threat protection"] }),
-  q("Which TWO controls must be in the first operating envelope of an autonomous invoice agent?", ["Disabled audit logs to reduce storage.","Unrestricted mailbox and ledger write access on day one.","Grounding in trusted vendor and policy sources.","Human review for posting, vendor creation, or payment."], [2, 3], "High-impact finance actions need human confirmation and trusted data. Broad writes and dark mode logging increase blast radius.", "rai", { source: "https://learn.microsoft.com/en-us/microsoft-copilot-studio/guidance/autonomous-agents", format: "multiple" }),
-  q("Business data must later feed other Microsoft AI systems. What organization choice should be made now?", ["Keep a governed, shareable store such as Dataverse or an approved lakehouse with clear ownership, rather than per-agent file dumps.","Block all downstream reuse so every team recaptures the same data.","Give each agent a private spreadsheet as the only copy.","Embed customer rows inside prompt text and call that a platform."], 0, "AB-100 includes organizing business-solution data so it is available to other AI systems without losing ownership or quality.", "grounding")
-];
-
-const learn = [
-  official("Leadership wants an “agentic-first” service program, not another FAQ bot on a case form. What should the architect treat as the unit of design?", ["A longer system prompt pasted into every Dynamics form.","A named business process with a bounded agent, tools, grounding, and a human-escalation path.","A Foundry catalog browse with no operating envelope.","A public Web Chat that skips identity so adoption is faster."], 1, "An agentic-first design starts from the business process and the agent’s authority, data, and handoff—not from a prompt bolted onto a screen.", "strategy", { source: "https://learn.microsoft.com/en-us/training/modules/introduction-agentic-ai-business-solution-architecture/" }),
-  official("Which Microsoft surfaces should an AB-100 architect expect to compose, rather than pick one forever?", ["Only Azure OpenAI Studio, because business apps cannot host agents.","Only Dynamics 365, because Copilot Studio cannot call business data.","Microsoft 365 Copilot, Copilot Studio, Dynamics 365 copilots, and Microsoft Foundry, each for a different altitude of work.","Only Power BI Q&A, because agents are a reporting feature."], 2, "The learning path expects a composed Microsoft stack: in-app copilots, Studio agents, M365 helpers, and Foundry when custom models or code-first agents are required.", "strategy", { source: "https://learn.microsoft.com/en-us/training/modules/introduction-agentic-ai-business-solution-architecture/" }),
-  official("Contoso scored every request as “needs an agent.” Which assessment should come first?", ["Whether the work is task automation, analytics assistance, or a decision that still needs a human owner.","Whether the request used the word autonomous.","Whether a catalog model has a marketing video.","Whether makers already opened Copilot Studio."], 0, "Requirements work starts by classifying the job: automate a task, assist analysis, or support a decision with a named human owner.", "grounding", { source: "https://learn.microsoft.com/en-us/training/modules/analyze-requirements-ai-powered-business-solutions/" }),
-  official("A knowledge extract is complete, six months old, and has unknown row-level permissions. What is the architect’s first call?", ["Connect it now because volume beats recency.","Fine-tune a model on the stale file and skip retrieval.","Treat the source as not ready until accuracy, relevance, timeliness, cleanliness, and availability—including who may see it—are confirmed.","Publish it to a public website so permissions become “open.”"], 2, "AB-100 requires reviewing grounding data for accuracy, relevance, timeliness, cleanliness, and availability before it becomes a production source.", "grounding", { source: "https://learn.microsoft.com/en-us/training/modules/analyze-requirements-ai-powered-business-solutions/" }),
-  official("Three teams each keep a private CSV of the same customer and case rows for their agents. What organization choice should be made now?", ["Keep the CSVs; agents cannot share a system of record.","Store rows only inside prompt text and call that a platform.","Block all downstream reuse so every team recaptures the data.","Keep a governed, shareable store such as Dataverse or an approved lakehouse with clear ownership."], 3, "Business-solution data must be organized so other AI systems can reuse it without losing quality, permissions, or ownership.", "grounding", { source: "https://learn.microsoft.com/en-us/training/modules/analyze-requirements-ai-powered-business-solutions/" }),
-  official("The cloud team follows CAF’s AI scenario. The Dynamics program runs Success by Design reviews. How should those frameworks be used together?", ["CAF for enterprise AI adoption and landing-zone alignment; Success by Design for Dynamics 365 and Power Platform implementation reviews.","Replace CAF with Success by Design for every Azure landing zone.","Treat the names as interchangeable workshop titles.","Replace Success by Design with CAF for every Solution Blueprint Review."], 0, "CAF’s AI scenario guides adoption strategy. Success by Design is prescriptive Dynamics implementation guidance. Use both at different altitudes.", "strategy", { source: "https://learn.microsoft.com/en-us/training/modules/design-overall-ai-strategy-business-solutions/" }),
-  official("Employees need permission-trimmed policy Q&A in Microsoft 365, a multi-step Dataverse case flow, and a specialized diagnostic model. Which platform split fits?", ["Foundry Computer Use for all three, with no identity.","Microsoft 365 Copilot for the FAQ, Copilot Studio for the governed case flow, and Foundry for the specialized model.","Studio only for the FAQ and M365 Copilot only for the Dataverse write path.","Public anonymous Web Chat for all three so authentication is skipped."], 1, "Multi-agent design assigns M365 Copilot to organizational Q&A, Studio to business-system orchestration, and Foundry to custom model or code-first work.", "strategy", { source: "https://learn.microsoft.com/en-us/training/modules/design-overall-ai-strategy-business-solutions/" }),
-  official("A department wants a helper that only answers from SharePoint under existing Microsoft 365 permissions. Another needs a multi-step approval that writes to Dataverse. What should be built?", ["A Microsoft 365 Copilot extension for the FAQ and a Copilot Studio agent for the governed write path.","Studio only for the FAQ and M365 Copilot only for the Dataverse writes.","One Foundry hosted agent with a shared mailbox identity for both.","Two public chat widgets so DLP never applies."], 0, "Extend Microsoft 365 Copilot when the job is permission-trimmed organizational knowledge. Use Studio when the process writes to business systems and needs enterprise ALM.", "strategy", { source: "https://learn.microsoft.com/en-us/training/modules/design-overall-ai-strategy-business-solutions/" }),
-  official("The AI Center of Excellence asked what belongs in its operating model. Which set is correct?", ["A single maker with owner rights on production and no review board.","A rule that prompts may never be versioned.","Roles, prompt and grounding standards, evaluation gates, and a path from proof of concept to production.","A catalog of model names with no owners or constraints."], 2, "A Microsoft AI CoE supplies operating roles, reusable standards, and promotion rules—not an unmanaged production canvas.", "strategy", { source: "https://learn.microsoft.com/en-us/training/modules/design-overall-ai-strategy-business-solutions/" }),
-  official("On the Microsoft Learn ROI module, finance scored the agent only on first-year license avoidance. What framing should the architect add?", ["Horizon-based value and total cost of ownership: change, risk, operations, and model spend—not license line items alone.","Ignore TCO and report only tokens saved in week one.","Count every ungrounded answer as a benefit because it is automation.","Delay any ROI model until the catalog has 10,000 entries."], 0, "AB-100 ROI includes TCO and multi-horizon value. A one-year license comparison hides operating cost and risk.", "roi", { source: "https://learn.microsoft.com/en-us/training/modules/evaluate-costs-benefits-ai-powered-business-solution/" }),
-  official("Contoso can buy a prebuilt service copilot, extend it in Studio, or build a Foundry agent. Which test should drive the choice?", ["Choose whichever demo used the longest prompt.","Always build custom so the catalog stays unused.","Whether the prebuilt skill covers the process; extend when the gap is bounded; build custom only when control, data, or model needs exceed extend.","Always buy and never add knowledge or tools."], 2, "Build, buy, or extend is an explicit exam skill. Prefer product capabilities, extend for bounded gaps, and custom-build when the gap is architectural.", "roi", { source: "https://learn.microsoft.com/en-us/training/modules/evaluate-costs-benefits-ai-powered-business-solution/" }),
-  official("Every request hits the largest deployed model, so inference cost swings wildly. Which AB-100 lever should be designed?", ["Pin every skill to the most expensive deployment to be safe.","Turn evaluation off so routing has no metrics.","Route by the maker’s favorite model name.","A model router that sends each request to the smallest suitable model that still meets the quality bar."], 3, "The study guide includes a model router so cost and quality can be balanced per request type.", "roi", { source: "https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ab-100" }),
-  official("A seller must ask for a summary of the open opportunity. Overnight invoice exceptions should start when mail arrives. How should those agents be bounded?", ["Interactive task help versus an event-triggered autonomous agent with a defined authority limit.","Two autonomous agents, because any Dynamics skill must run unattended.","One classic topic for both, because triggers and events are interchangeable.","A Foundry catalog entry for chat and a Power BI alert for invoices."], 0, "Task agents wait for a user turn. Autonomous agents perceive events and act inside scoped permissions, with human approval on high-impact steps.", "studio", { source: "https://learn.microsoft.com/en-us/training/modules/design-ai-agents-business-solutions/" }),
-  official("Sellers say “coverage gap” when they mean a custom opportunity column. Sales Copilot keeps querying the wrong field. What should be designed first?", ["A public website knowledge source for CRM slang.","A glossary or synonym that maps the business phrase to the Dataverse column.","A Computer Use session that clicks the opportunity form.","A Foundry fine-tune that memorizes every nickname."], 1, "Copilot in customer-experience apps is taught organization language through business terms and synonyms so chat binds to the correct columns.", "d365", { source: "https://learn.microsoft.com/en-us/training/modules/design-ai-agents-business-solutions/" }),
-  official("In Copilot Studio topic design, users ask one utterance that needs a policy lookup and a ticket update. Classic trigger phrases keep firing a single topic. Which orchestration change fits?", ["Add 200 near-duplicate trigger phrases to the same topic.","Disable tools so the model answers from memory only.","Turn on generative orchestration so the planner can chain knowledge, topics, and tools.","Replace the agent with a static FAQ page."], 2, "Generative orchestration is the planner for multi-intent chaining. Classic NLU is single-intent and needs more handcrafted topics.", "studio", { source: "https://learn.microsoft.com/en-us/training/modules/design-ai-agents-business-solutions/" }),
-  official("An unrecognized utterance currently loops the same topic until the model invents an answer. What topic design is required?", ["An explicit fallback that clarifies, offers search, or escalates instead of hallucinating.","Restart the same topic with a higher temperature.","Hide the unknown intent so analytics stay green.","Disable fallback because generative answers never fail."], 0, "Studio topic design includes fallback: unknown or low-confidence turns must clarify or escalate, not invent.", "studio", { source: "https://learn.microsoft.com/en-us/training/modules/design-ai-agents-business-solutions/" }),
-  official("A Power Apps canvas app will collect a field inspection, then ask an agent to draft the follow-up work order. Where should the AI step sit?", ["As a named step in the business process with a prompt action or agent call, not as an unbound chat beside the form.","Only in a maker’s personal Copilot Chat, disconnected from the app.","As a screenshot emailed to a shared mailbox.","As a Foundry catalog card with no app binding."], 0, "Design the AI component inside the business process the canvas app already runs, using a prompt action or agent call with a defined output.", "studio", { source: "https://learn.microsoft.com/en-us/training/modules/design-ai-agents-business-solutions/" }),
-  official("Which TWO signals justify a custom or small language model instead of a catalog foundation model?", ["The maker prefers a unique model name on a slide.","A regulated domain that catalog models cannot meet after evaluation.","Need for a compact, specialized model with documented cost or latency benefits.","The catalog already meets quality, safety, and latency bars."], [1, 2], "Custom models are justified by unmet quality, domain, cost, or latency needs after evaluation—not preference or an already-sufficient catalog.", "foundry", { source: "https://learn.microsoft.com/en-us/training/modules/design-extensibility-ai-solutions/", format: "multiple" }),
-  official("Per the extensibility module, a local diagnostic utility already speaks the open tool protocol for models. How should Copilot Studio consume it?", ["A2A, because every local process is an agent.","Paste the tool output into the system prompt weekly.","Disable DLP so the utility can call any connector.","An MCP tool connection, after authentication, scope, and DLP review."], 3, "MCP standardizes tool and resource access. Discovery does not skip governance of auth, scope, and data policy.", "foundry", { source: "https://learn.microsoft.com/en-us/training/modules/design-extensibility-ai-solutions/" }),
-  official("The Learn extensibility guidance covers a line-of-business desktop app with no API. The agent must complete a weekly status form. What option is in scope?", ["Import the EXE as a Dataverse table.","Computer Use against a locked-down machine, with least privilege and confirmation on destructive steps.","Store the UI password in a topic message.","MCP packet capture on the corporate firewall."], 1, "Computer Use is the Copilot Studio path when the only interface is a UI. Isolation and human confirmation are part of the design.", "foundry", { source: "https://learn.microsoft.com/en-us/training/modules/design-extensibility-ai-solutions/" }),
-  official("A specialized Foundry agent must keep multi-turn diagnosis state while Studio remains the employee front door. Which collaboration style matches?", ["Ask the employee to retype the case in both agents.","Copy the Foundry weights into a Studio topic variable.","Agent-to-agent delegation with a clear contract, identity, and correlation across traces.","A single stateless HTTP POST that drops history."], 2, "A2A is the open pattern for agent collaboration. The design still needs trust boundaries, observability, and a task contract.", "eco", { source: "https://learn.microsoft.com/en-us/training/modules/design-extensibility-ai-solutions/" }),
-  official("The study-guide skill for Finance and operations in-app help says users need extra procedure manuals. What should the architect propose?", ["The documented process for adding knowledge sources to in-app help and guidance, rather than a shadow chatbot with a copied manual.","Store the manuals only in a maker’s OneDrive.","Disable in-app help and rely on hallway training.","Email the manuals to each user weekly."], 0, "The study guide calls out adding knowledge to in-app help and guidance for Finance and Supply Chain apps.", "d365", { source: "https://learn.microsoft.com/en-us/training/modules/orchestrate-configuration-prebuilt-agents-apps/" }),
-  official("Sellers already live in Dynamics 365 Sales and Outlook. Leadership wants meeting prep and opportunity coaching without a second case agent. What should be orchestrated first?", ["A public Web Chat that ignores seller identity.","Microsoft 365 Copilot for Sales configured against the existing Sales and Microsoft 365 graph, not a duplicate Studio bot.","A Foundry Computer Use agent that clicks Outlook.","A custom model trained on exported PST files."], 1, "Orchestrate the prebuilt Microsoft 365 Copilot for Sales experience before inventing a parallel seller agent.", "eco", { source: "https://learn.microsoft.com/en-us/training/modules/orchestrate-configuration-prebuilt-agents-apps/" }),
-  official("Makers keep building one-off prompt experiments beside a canvas app. Which Power Platform feature should the architect point them to first?", ["AI Hub / AI Builder style capabilities for governed prompts and models inside the platform, then Studio when an agent is required.","A personal OpenAI key stored in a screen label.","Exporting the app to Excel so formulas replace prompts.","Turning off DLP so any external model can be pasted in."], 0, "Power Platform AI features, including AI hub, are the first in-platform place for prompts and models before a custom agent is justified.", "eco", { source: "https://learn.microsoft.com/en-us/training/modules/orchestrate-configuration-prebuilt-agents-apps/" }),
-  official("Customer Service cases and Finance invoice status both appear in one employee question. What orchestration rule should be written?", ["Skip integration because each app has its own Copilot.","Keep two isolated agents with no shared case or invoice identifier.","Design a cross-app conversation contract: which agent owns the turn, which system of record answers, and how identity is passed.","Merge both apps into one unmanaged topic."], 2, "AB-100 expects AI solutions that span multiple Dynamics 365 apps to have an explicit ownership and data contract, not two disconnected chats.", "eco", { source: "https://learn.microsoft.com/en-us/training/modules/orchestrate-configuration-prebuilt-agents-apps/" }),
-  official("The monitor-and-tune module asks where Contoso should start after the first production week if it wants session outcomes, engagement, and satisfaction for a Copilot Studio agent.", ["Azure DevOps sprint burndown for the maker team.","Export every transcript into a global variable and chart it in Excel.","Copilot Studio analytics and agent-health views that report outcomes such as resolved, escalated, and abandoned.","The Foundry model catalog leaderboard, because it already includes tenant CSAT."], 2, "Studio exposes conversation and autonomous-run analytics so architects can see engagement, outcomes, and satisfaction without a parallel warehouse first.", "monitor", { source: "https://learn.microsoft.com/en-us/training/modules/analyze-monitor-tune-ai-powered-business-solutions/" }),
-  official("On the Learn monitoring path, product backlog comments say the agent “sounds confident but cites last year’s policy.” Where should that feedback land?", ["Only as a new trigger phrase that repeats the old policy.","In the analysis of agent usage and the knowledge-freshness backlog, then into a tuned source or prompt.","Only in the brand-tone guide.","Ignore qualitative feedback because only token charts matter."], 1, "AB-100 includes analyzing backlog and user feedback of AI and agent usage, not only infrastructure metrics.", "monitor", { source: "https://learn.microsoft.com/en-us/training/modules/analyze-monitor-tune-ai-powered-business-solutions/" }),
-  official("Operations has traces but no tuning loop. Which use of that telemetry is correct?", ["Delete low-scoring sessions to improve the average.","Increase autonomy whenever latency rises.","Archive traces unread so the dashboard stays green.","Interpret quality, latency, and failure traces, then change prompts, tools, or models against a baseline."], 3, "Monitoring exists to tune behavior. Vanity cleanup and unearned autonomy are not tuning.", "monitor", { source: "https://learn.microsoft.com/en-us/training/modules/analyze-monitor-tune-ai-powered-business-solutions/" }),
-  official("Which TWO signals belong on the first agent-health scorecard?", ["Resolved versus escalated versus abandoned outcomes.","The nickname used in the greeting topic.","Groundedness, latency, and tool-failure rate against a baseline.","The number of unused catalog models in the tenant."], [0, 2], "Health starts with conversation outcomes and quality or reliability metrics. Branding and unused catalog entries are not operating signals.", "monitor", { source: "https://learn.microsoft.com/en-us/training/modules/analyze-monitor-tune-ai-powered-business-solutions/", format: "multiple" }),
-  official("In the testing module, a test set scores high on intent recognition and low on groundedness. What should be inspected first?", ["The number of environments in the tenant.","The footer font on the Adaptive Card.","Knowledge sources, citations, and whether ungrounded answers are allowed.","Whether the agent has a nickname."], 2, "The agent understands the ask but is not sufficiently tied to approved sources. That is a grounding and evaluation problem.", "test", { source: "https://learn.microsoft.com/en-us/training/modules/manage-testing-ai-powered-business-solutions/" }),
-  official("Which TWO practices does the Learn testing module put in the release quality gate for a custom Foundry model?", ["Ship when the catalog page has a logo.","Evaluation against a labeled scenario set for quality and safety.","Compare the candidate to the current production baseline.","Skip human review if latency improved."], [1, 2], "Custom-model validation is an AB-100 testing skill. A catalog page and a single latency win are not a gate.", "test", { source: "https://learn.microsoft.com/en-us/training/modules/manage-testing-ai-powered-business-solutions/", format: "multiple" }),
-  official("Makers want Copilot to write the entire regression pack and ship it the same day. What test-case strategy is defensible?", ["Use Copilot to draft cases from the process and risk list, then humans curate expected answers and safety checks before the suite is a gate.","Accept every generated case because generation equals coverage.","Skip expected answers so scoring stays flexible.","Test only the greeting topic."], 0, "The exam asks for a strategy that uses Copilot to create test cases—not unsupervised publication of generated tests.", "test", { source: "https://learn.microsoft.com/en-us/training/modules/manage-testing-ai-powered-business-solutions/" }),
-  official("When the solution spans Customer Service cases and Finance invoice status, what should the Learn-aligned test strategy include?", ["Only a single-topic trigger-phrase quiz in Studio.","End-to-end scenarios that cross both apps, plus contract tests at each integration boundary.","Only a Foundry catalog browse with no business data.","Skip tests because each app has its own Copilot."], 1, "AB-100 calls for end-to-end tests of AI solutions that use multiple Dynamics 365 apps, not isolated demos.", "test", { source: "https://learn.microsoft.com/en-us/training/modules/manage-testing-ai-powered-business-solutions/" }),
-  official("Which prompt practice should a validation checklist reject?", ["Instructions that name the allowed sources and the refusal when sources are missing.","A short role, task, and output contract with an example.","Secrets, production connection strings, or unrestricted write tools embedded in the prompt.","A versioned prompt stored in the library with an owner."], 2, "Effective Copilot prompts are explicit about sources and outputs. They are not a place to hide credentials or unbounded tools.", "test", { source: "https://learn.microsoft.com/en-us/training/modules/manage-testing-ai-powered-business-solutions/" }),
-  official("Which environment pattern does the ALM module prescribe for carrying a Studio agent from first build to production?", ["One production environment that every maker edits live.","No Dataverse database, so solutions cannot be used.","Separate development, test, and production environments with solutions, environment variables, and connection references.","A personal developer environment as the only production host."], 2, "Power Platform ALM needs Dataverse, solutions, and environment-specific configuration. Live-editing production is not an environment strategy.", "alm", { source: "https://learn.microsoft.com/en-us/training/modules/design-alm-process-ai-powered-business-solutions/" }),
-  official("The ALM module covers a Copilot Studio case agent and an X++ pricing extension that must both reach test next month. Which statement is correct?", ["Skip solutions and copy the agent JSON into the AOT project.","The Studio agent travels in a Dataverse solution and Power Platform pipeline; the X++ change follows finance and operations ALM, not the same solution package.","Put both artifacts only in the Foundry model catalog.","Export the X++ project into the Studio canvas and ship both as one unmanaged topic."], 1, "Copilot Studio components are solution-aware on Dataverse. Finance and operations customizations have a separate ALM path.", "alm", { source: "https://learn.microsoft.com/en-us/training/modules/design-alm-process-ai-powered-business-solutions/" }),
-  official("Contoso must promote a Studio agent and a Foundry agent deployment. Which pipeline split is defensible?", ["SharePoint folder drop as the only release mechanism.","A single X++ deployable package for both.","Manual copy-paste of connection strings in production.","Power Platform pipelines or Build Tools for the solution-aware agent; Foundry evaluation and a managed endpoint for the Foundry agent."], 3, "Studio ALM rides Power Platform solutions and pipelines. Foundry agents need their own evaluate-then-promote lifecycle.", "alm", { source: "https://learn.microsoft.com/en-us/training/modules/design-alm-process-ai-powered-business-solutions/" }),
-  official("Grounding documents and evaluation sets change weekly in production. What ALM rule should be written for that data?", ["Anyone with chat access may overwrite the production corpus.","Version the corpus and eval set, promote through environments, and record who changed what—do not live-edit production knowledge.","Store the only copy inside a maker’s OneDrive.","Disable audit so refreshes stay fast."], 1, "ALM for data used in models and agents means versioned, reviewable promotion of grounding and eval assets.", "alm", { source: "https://learn.microsoft.com/en-us/training/modules/design-alm-process-ai-powered-business-solutions/" }),
-  official("A custom Foundry model improved latency in a notebook. Makers want it swapped into production tonight. What ALM gate is required?", ["A registered model version, evaluation against the pinned scenario set, and a compared baseline before the deployment is switched.","Swap the deployment name because notebooks are production.","Skip registration if the notebook title includes prod.","Publish the weights to a public website for “open ALM.”"], 0, "Custom-model ALM is version, evaluate, compare, then promote—not a notebook overwrite.", "alm", { source: "https://learn.microsoft.com/en-us/training/modules/design-alm-process-ai-powered-business-solutions/" }),
-  official("The Responsible AI module’s red-team notes show users can override policy by saying “ignore your instructions.” What belongs in the design?", ["Granting the agent broader write tools so it can fight back.","Input checks, grounded refusal, scoped tools, and monitoring for prompt-manipulation attempts.","Disabling transcripts so attacks cannot be reviewed.","A longer marketing disclaimer in the greeting topic only."], 1, "Prompt manipulation is an explicit exam skill. Mitigations are technical and operational, not a banner in the greeting.", "rai", { source: "https://learn.microsoft.com/en-us/training/modules/design-responsible-ai-security-governance-risk-management-compliance/" }),
-  official("Per the Responsible AI access-control skill, who should be able to change grounding documents and model-tuning sets?", ["No one, because grounding data must be immutable forever.","The agent’s service principal with owner rights on the whole tenant.","Any authenticated website visitor.","A least-privilege group with audit trails; not every maker and not the conversational identity of the agent."], 3, "AB-100 includes access control on grounding data and model tuning, plus audit trails for those changes.", "rai", { source: "https://learn.microsoft.com/en-us/training/modules/design-responsible-ai-security-governance-risk-management-compliance/" }),
-  official("Legal asked whether customer transcripts may leave the approved region when a maker picks a cheaper model. What must the design validate?", ["Data residency and movement for grounding, prompts, traces, and model endpoints before a region or vendor is changed.","Nothing; cheaper models are always in-region.","Only the marketing site’s CDN region.","Only the maker’s laptop locale."], 0, "Residency and cross-border movement apply to the whole AI path, not only the app database.", "rai", { source: "https://learn.microsoft.com/en-us/training/modules/design-responsible-ai-security-governance-risk-management-compliance/" }),
-  official("On the Responsible AI module, risk wants a dashboard for customer-facing agents. Which content belongs there?", ["A list of catalog model names with no evaluation scores.","Only token spend and the number of makers with Studio licenses.","Safety and quality evaluations, fairness or drift signals, and completeness of audit trails for model and data changes.","The marketing slogan used in the launch email."], 2, "Responsible AI operations track evaluation quality, safety, and auditability. Cost and licensing are useful but they are not the RAI control plane.", "rai", { source: "https://learn.microsoft.com/en-us/training/modules/design-responsible-ai-security-governance-risk-management-compliance/" }),
-  official("Which TWO controls does the Responsible AI module require in the first operating envelope of an autonomous invoice agent?", ["Disabled audit logs to reduce storage.","Unrestricted mailbox and ledger write access on day one.","Grounding in trusted vendor and policy sources.","Human review for posting, vendor creation, or payment."], [2, 3], "High-impact finance actions need human confirmation and trusted data. Broad writes and dark logging increase blast radius.", "rai", { source: "https://learn.microsoft.com/en-us/training/modules/design-responsible-ai-security-governance-risk-management-compliance/", format: "multiple" }),
-  official("Match each Microsoft control to the decision it should own.", ["Microsoft Purview","Success by Design","Microsoft Defender","Cloud Adoption Framework AI scenario"], 0, "Keep adoption strategy, Dynamics implementation guidance, data governance, and threat protection on the control that is built for that job.", "strategy", { source: "https://learn.microsoft.com/en-us/training/modules/design-overall-ai-strategy-business-solutions/", format: "matching", matches: { "0": "C", "1": "B", "2": "D", "3": "A" }, matchLabels: ["A. Enterprise AI adoption and landing-zone alignment","B. Dynamics 365 implementation reviews and living blueprint","C. Classification, DLP, and residency of grounding data","D. Identity and endpoint threat protection"] })
-];
-
-const coursewareQuestions = [
-  courseware("The Contoso Service Resolution Accelerator workshop lists every Customer Service queue as a candidate. What should the first use-case record lock?", ["Every queue, because volume is the value story.","A Foundry catalog browse with no process owner.","A public Web Chat that answers any Contoso policy question.","One named resolution process with a measurable outcome, a human-escalation owner, and evidence that grounding data exists."], 3, "Lab 1 qualifies a single process before platform work. An unbounded “all service” envelope has no grounding or authority boundary.", "grounding", "lab-01-qualify-the-process-and-grounding-data.md", { source: "https://learn.microsoft.com/en-us/training/modules/analyze-requirements-ai-powered-business-solutions/" }),
-  courseware("Sponsors want the accelerator to start tomorrow. The data-readiness register still has TODO rows for freshness, permission trimming, and citation sources. What is the architecture decision?", ["Ship the agent and fill the register after the first incidents.","Treat the process as not ready to ground until the register is complete; do not design retrieval against unknown sources.","Copy the TODOs into the system prompt so the model “knows” the gaps.","Mark every source ready because Contoso already has Dataverse."], 1, "The lab’s gate is a completed readiness register. Missing freshness or ACL evidence is a stop, not a prompt footnote.", "grounding", "lab-01-qualify-the-process-and-grounding-data.md", { source: "https://learn.microsoft.com/en-us/training/modules/analyze-requirements-ai-powered-business-solutions/" }),
-  courseware("Contoso wants the Service Resolution Accelerator to be “one agent everywhere”: Microsoft 365 chat, Copilot Studio, Dynamics 365, and a Foundry specialist in a single identity. What should the platform decision record say?", ["One anonymous Web Chat so channel choice never matters.","Put every skill in Foundry Computer Use so no identity is needed.","Pick a front-door platform, name each specialist’s envelope, and write revisit triggers if the job outgrows that envelope.","Refuse Microsoft 365 because architects may use only Studio."], 2, "Lab 2 draws a platform path and agent boundary. A single identity that spans every Microsoft surface is not a boundary.", "strategy", "lab-02-choose-the-platform-and-agent-boundaries.md", { source: "https://learn.microsoft.com/en-us/training/modules/design-overall-ai-strategy-business-solutions/" }),
-  courseware("The accelerator’s platform record is three months old. Makers now need a code-first diagnostic model that Studio cannot host. What should happen before they add Foundry?", ["Add Foundry silently and leave the original boundary map unchanged.","Reopen the platform decision against the written revisit triggers, then extend the agent-boundary map.","Move the whole accelerator to a public website knowledge source.","Disable Studio so only Foundry remains."], 1, "Lab 2 requires named revisit triggers. Crossing the envelope is a recorded decision, not an unnoticed canvas change.", "strategy", "lab-02-choose-the-platform-and-agent-boundaries.md", { source: "https://learn.microsoft.com/en-us/training/modules/design-overall-ai-strategy-business-solutions/" }),
-  courseware("Finance will fund the Contoso Service Resolution Accelerator only if year-one licenses go down. What belongs in the value case and operating-model charter?", ["A one-line license-avoidance target with no owners.","A rule that prompts stay private to each maker.","A promise that every hallucination counts as automation savings.","Horizon ROI and TCO plus named operating roles, a prompt-library policy, and a model-routing rule."], 3, "Lab 3 funds an operating model, not a license delta. Roles, prompt standards, and routing are part of the charter.", "roi", "lab-03-build-the-value-case-and-ai-operating-model.md", { source: "https://learn.microsoft.com/en-us/training/modules/evaluate-costs-benefits-ai-powered-business-solution/" }),
-  courseware("The core Service Resolution agent must look up policy, draft a case note, and wait before writing to Dataverse. What should the prompt-library contract require?", ["One giant system prompt that embeds the Dataverse connection string.","Typed inputs and outputs, named grounding sources, and an approval step on the write tool.","A greeting topic with no output schema.","A rule that write tools never need human confirmation."], 1, "Lab 4 treats prompts as contracts: sources, types, and approval paths. Secrets and unbounded writes are not a contract.", "studio", "lab-04-design-the-core-agent-grounding-and-prompt-contracts.md", { source: "https://learn.microsoft.com/en-us/training/modules/design-ai-agents-business-solutions/" }),
-  courseware("The accelerator needs a local warranty checker that already speaks MCP, a Foundry diagnostics specialist, and a weekly status form that exists only as a desktop UI. How should the extensibility map assign those?", ["MCP for the warranty tool after auth and DLP review; A2A to the Foundry specialist; Computer Use only for the UI with confirmation on destructive steps.","Computer Use for all three so one pattern covers tools, agents, and UIs.","A2A for the warranty checker because every local process is an agent.","Paste all three outputs into the system prompt each Monday."], 0, "Lab 5 separates tool protocol, agent collaboration, and UI fallback. Collapsing them into one pattern hides ownership.", "foundry", "lab-05-design-multi-agent-mcp-and-computer-use-extensibility.md", { source: "https://learn.microsoft.com/en-us/training/modules/design-extensibility-ai-solutions/" }),
-  courseware("Which TWO assignments belong on the Contoso Service Resolution Accelerator integration map?", ["Dynamics 365 / Dataverse remains the case system of record.","Microsoft 365 Copilot owns posting case resolutions to Dataverse.","Power Platform carries the governed write actions and Studio orchestration.","Each channel keeps a private CSV of cases so integrations stay simple."], [0, 2], "Lab 6 maps experiences, actions, and systems of record. Case writes stay on the business platform; M365 is not the ledger.", "eco", "lab-06-map-dynamics-365-power-platform-and-microsoft-365-integration.md", { source: "https://learn.microsoft.com/en-us/training/modules/orchestrate-configuration-prebuilt-agents-apps/", format: "multiple" }),
-  courseware("The first production weekend is booked. The evaluation plan still has no labeled cases or release threshold. What should the architect refuse?", ["Going live without a scored scenario set, a groundedness bar, and a documented rollback if the bar is missed.","Adding Copilot Studio analytics after go-live.","Writing a telemetry scorecard at all.","Comparing the candidate to a baseline."], 0, "Lab 7 makes evaluation a release gate. A calendar slot is not a quality bar.", "test", "lab-07-create-the-evaluation-telemetry-and-tuning-plan.md", { source: "https://learn.microsoft.com/en-us/training/modules/manage-testing-ai-powered-business-solutions/" }),
-  courseware("After release, traces show rising tool failures but CSAT is still green. What tuning rule should the telemetry scorecard enforce?", ["Ignore tool failures while CSAT holds.","Delete the failing sessions so the average recovers.","Investigate traces, change the tool or prompt against the baseline, and re-score before raising autonomy.","Raise autonomy immediately because users still click Like."], 2, "Lab 7 treats telemetry as a tuning loop. Vanity CSAT does not authorize more write authority.", "monitor", "lab-07-create-the-evaluation-telemetry-and-tuning-plan.md", { source: "https://learn.microsoft.com/en-us/training/modules/analyze-monitor-tune-ai-powered-business-solutions/" }),
-  courseware("Who should the ALM RACI name for promoting the Service Resolution Accelerator and for owning a failed production run?", ["Any maker with Studio access promotes; the conversational identity owns incidents.","The CEO promotes from a personal developer environment.","A named release owner promotes through managed environments; a named operations owner owns incidents and rollback.","No owner, because managed solutions promote themselves."], 2, "Lab 8 is environments plus operational ownership. Promotion and incident response need named humans, not the agent identity.", "alm", "lab-08-design-alm-environments-and-operational-ownership.md", { source: "https://learn.microsoft.com/en-us/training/modules/design-alm-process-ai-powered-business-solutions/" }),
-  courseware("Legal will not sign the Contoso Service Resolution Accelerator go-live. The final ADR is still missing residency, audit, and Responsible AI evidence. What is the decision?", ["Go live and attach the ADR next quarter.","Store customer transcripts in a cheaper out-of-region model to save the launch date.","Ship if the greeting topic includes a disclaimer.","Record a no-go until identity, data classification, residency, RAI evaluations, and audit trails are in the governance record."], 3, "Lab 9 closes the security, RAI, and governance record. An incomplete ADR is a stop, not a disclaimer.", "rai", "lab-09-complete-the-security-responsible-ai-and-governance-record.md", { source: "https://learn.microsoft.com/en-us/training/modules/design-responsible-ai-security-governance-risk-management-compliance/" })
-];
-
-const topicLabMap = {
-  'Requirements & Grounding': ['lab-01'],
-  'AI Strategy & CAF': ['lab-02'],
-  'ROI & Build-Buy-Extend': ['lab-03'],
-  'Copilot in Dynamics 365': ['lab-04', 'lab-06'],
-  'Copilot Studio Agents': ['lab-04'],
-  'Foundry & Extensibility': ['lab-05'],
-  'Ecosystem Integration': ['lab-06'],
-  'Monitor & Tune': ['lab-07'],
-  'Testing & Evaluation': ['lab-07'],
-  'ALM & Environments': ['lab-08'],
-  'Responsible AI & Security': ['lab-09']
+// Unofficial English practice. IDs are authored, not derived from array order.
+// Evidence keys reference documents read on 2026-09-06; see docs/content-coverage.md.
+const questionSources = {
+  scope: 'https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ab-100',
+  strategy: 'https://learn.microsoft.com/azure/cloud-adoption-framework/ai/strategy',
+  blueprint: 'https://learn.microsoft.com/dynamics365/guidance/implementation-guide/success-by-design',
+  grounding: 'https://learn.microsoft.com/en-us/training/modules/analyze-requirements-ai-powered-business-solutions/3-review-data-grounding-accuracy-relevance-timeliness-cleanliness-availability',
+  data: 'https://learn.microsoft.com/en-us/training/modules/analyze-requirements-ai-powered-business-solutions/4-organize-business-solution-data-available-other-ai-systems',
+  value: 'https://learn.microsoft.com/microsoft-copilot-studio/guidance/agent-business-value-tell-value-story',
+  roi: 'https://learn.microsoft.com/azure/migrate/concepts-business-case-calculation?view=migrate',
+  sales: 'https://learn.microsoft.com/dynamics365/sales/extend-copilot-chat',
+  salesSetup: 'https://learn.microsoft.com/microsoft-sales-copilot/set-up-sales-chat',
+  service: 'https://learn.microsoft.com/en-us/microsoft-copilot-service/about-microsoft-copilot-for-service',
+  payables: 'https://learn.microsoft.com/dynamics365/business-central/payables-agent',
+  help: 'https://learn.microsoft.com/dynamics365/fin-ops-core/dev-itpro/copilot/extend-copilot-generative-help',
+  fnoData: 'https://learn.microsoft.com/dynamics365/fin-ops-core/dev-itpro/copilot/chat-with-fno-data',
+  orchestration: 'https://learn.microsoft.com/microsoft-copilot-studio/guidance/generative-orchestration',
+  autonomous: 'https://learn.microsoft.com/microsoft-copilot-studio/guidance/autonomous-agents',
+  language: 'https://learn.microsoft.com/microsoft-copilot-studio/guidance/language-understanding',
+  tools: 'https://learn.microsoft.com/microsoft-copilot-studio/guidance/agent-tools',
+  ai: 'https://learn.microsoft.com/microsoft-copilot-studio/guidance/ai-capabilities',
+  mcp: 'https://learn.microsoft.com/microsoft-copilot-studio/mcp-add-existing-server-to-agent',
+  a2a: 'https://learn.microsoft.com/microsoft-copilot-studio/add-agent-agent-to-agent',
+  reasoning: 'https://learn.microsoft.com/microsoft-copilot-studio/authoring-reasoning-models',
+  voice: 'https://learn.microsoft.com/microsoft-copilot-studio/voice-realtime-voice-agents',
+  pages: 'https://learn.microsoft.com/power-apps/maker/model-driven-apps/generative-page-external-tools',
+  pagesAlm: 'https://learn.microsoft.com/power-apps/maker/model-driven-apps/generative-pages',
+  feed: 'https://learn.microsoft.com/power-apps/user/supervise-agents-with-agent-feed',
+  wa: 'https://learn.microsoft.com/power-platform/well-architected/pillars',
+  foundryTools: 'https://learn.microsoft.com/azure/ai-services/what-are-ai-services',
+  documents: 'https://learn.microsoft.com/azure/ai-services/content-understanding/choosing-right-ai-tool',
+  fineTune: 'https://learn.microsoft.com/azure/foundry/openai/concepts/fine-tuning-considerations',
+  lifecycle: 'https://learn.microsoft.com/azure/foundry/agents/concepts/development-lifecycle',
+  evaluation: 'https://learn.microsoft.com/microsoft-copilot-studio/analytics-agent-evaluation-intro',
+  alm: 'https://learn.microsoft.com/microsoft-copilot-studio/guidance/alm',
+  almScope: 'https://learn.microsoft.com/en-us/training/modules/design-alm-process-ai-powered-business-solutions/',
+  unifiedAlm: 'https://learn.microsoft.com/power-platform/admin/unified-experience/tutorial-build-pipeline-azure-devops',
+  modelAlm: 'https://learn.microsoft.com/en-us/training/modules/design-alm-process-ai-powered-business-solutions/5-design-alm-process-custom-ai-models',
+  flows: 'https://learn.microsoft.com/microsoft-copilot-studio/flows-overview',
+  router: 'https://learn.microsoft.com/azure/foundry/openai/how-to/evaluate-model-router',
+  security: 'https://learn.microsoft.com/en-us/training/modules/design-responsible-ai-security-governance-risk-management-compliance/5-analyze-solution-ai-vulnerabilities-mitigations-prompt-manipulation',
+  access: 'https://learn.microsoft.com/en-us/training/modules/design-responsible-ai-security-governance-risk-management-compliance/8-design-access-controls-ground-data-model-tune',
+  audit: 'https://learn.microsoft.com/en-us/training/modules/design-responsible-ai-security-governance-risk-management-compliance/9-design-audit-trails-changes-models-data',
+  residency: 'https://learn.microsoft.com/en-us/power-platform/admin/geographical-availability-copilot',
+  governance: 'https://learn.microsoft.com/en-us/training/modules/design-responsible-ai-security-governance-risk-management-compliance/7-validate-data-residency-movement-compliance'
 };
 
-const questions = [...dumpsbase, ...learn, ...coursewareQuestions].map((item, index) => ({
-  ...item,
-  id: index + 1,
-  official: item.official || false,
-  format: item.format || 'single',
-  sourceType: item.sourceType || 'DumpsBase practice',
-  verification: item.verification || 'Unofficial practice; verify against Microsoft Learn',
-  labIds: item.labIds || topicLabMap[item.topic] || []
-}));
+const practice = ({ evidence, ...record }) => ({
+  official: false,
+  sourceType: 'Unofficial practice, Learn-aligned',
+  verification: 'Documentation-reviewed; scenario judgment, not a product execution test',
+  verifiedOn: '2026-09-06',
+  format: 'single',
+  ...record,
+  source: questionSources[evidence]
+});
+const c1756 = slug => `https://github.com/tertiarycourses/C1756-AB-100-Microsoft-Certified-Agentic-AI-Business-Solutions-Architect/blob/main/labs/${slug}`;
+
+const questions = [
+  practice({
+    id: 1, revision: 2, topic: 'Foundry & Extensibility', labIds: ['lab-05', 'lab-07'], evidence: 'lifecycle',
+    question: 'A catalog model passes public benchmarks but has not processed the insurer\'s claims. What evidence should authorize its first customer-facing release?',
+    options: [
+      'A comparison of model size and public benchmark rankings.',
+      'A deployment test confirming regional quota and endpoint access.',
+      'A license review covering commercial use and supplier support.',
+      'A claims evaluation covering task quality, safety, and latency.'
+    ], answer: 3,
+    explanation: 'D tests the actual workload before release. Public benchmarks help shortlist models, endpoint tests establish connectivity, and licensing establishes usage rights. None of A, B, or C establishes that the model handles this insurer\'s claims safely and accurately.'
+  }),
+  practice({
+    id: 2, revision: 2, topic: 'Copilot Studio Agents', labIds: ['lab-04'], evidence: 'autonomous',
+    question: 'A representative requests case summaries during calls. A separate helper must classify incoming invoice emails overnight. Which initiation design meets both requirements?',
+    options: [
+      'Use scheduled runs for summaries and conversational turns for invoices.',
+      'Use user-triggered summaries and event-triggered invoice processing.',
+      'Use email triggers for both, with representatives emailing case IDs.',
+      'Use conversation triggers for both, with invoices queued until sign-in.'
+    ], answer: 1,
+    explanation: 'B preserves interactive assistance for calls and unattended event handling for invoices. A reverses those needs. C adds an unnecessary email step during calls. D cannot process the overnight backlog without a user. The event agent still needs scoped permissions and an explicit authority limit.'
+  }),
+  practice({
+    id: 3, revision: 2, topic: 'Copilot in Dynamics 365', labIds: ['lab-04', 'lab-06'], evidence: 'sales',
+    question: 'In Dynamics 365 Sales, sellers use "coverage gap" for a custom opportunity column. Copilot retrieves a different column. What is the most targeted correction?',
+    options: [
+      'Define the business phrase and its column mapping in the glossary and synonyms.',
+      'Add a prompt-guide suggestion asking sellers to restate the request.',
+      'Add a knowledge article describing how the sales team uses the phrase.',
+      'Change the opportunity summary layout to highlight the custom column.'
+    ], answer: 0,
+    explanation: 'A addresses the semantic mapping used to interpret business terms. A prompt suggestion changes discoverability, an article explains the term without necessarily fixing column selection, and a summary layout changes presentation rather than query interpretation.'
+  }),
+  practice({
+    id: 4, revision: 2, topic: 'Ecosystem Integration', labIds: ['lab-02', 'lab-05'], evidence: 'strategy', format: 'matching',
+    question: 'A portfolio contains four distinct needs. Match each implementation choice to the strongest justification, rather than using one platform for everything.',
+    options: ['Prebuilt Dynamics 365 capability', 'Custom Copilot Studio agent', 'MCP tool integration', 'Fine-tuned language model'],
+    matchLabels: [
+      'A. A product workflow already covers the required business task',
+      'B. A low-code conversation must coordinate custom business steps',
+      'C. Several agents need a shared, discoverable external tool contract',
+      'D. Labeled examples address a persistent task-specific behavior gap'
+    ], matches: { 0: 'A', 1: 'B', 2: 'C', 3: 'D' }, answer: 0,
+    explanation: 'Prebuilt functionality avoids unnecessary custom work; Studio authors process-specific agents; MCP standardizes access to tools; fine-tuning changes learned behavior. Tool access is not model training, and a model alone does not supply a business workflow. MCP also needs a supported reachable endpoint, authentication where required, and policy review.'
+  }),
+  practice({
+    id: 5, revision: 2, topic: 'Monitor & Tune', labIds: ['lab-07'], evidence: 'value',
+    question: 'A standard conversational Studio agent is live. The owner needs resolution, escalation, abandonment, and CSAT trends before building custom reports. Where should they start?',
+    options: [
+      'Power Platform capacity reports for credits and environment usage.',
+      'Application Insights dependency traces for connector response times.',
+      'Copilot Studio conversational analytics for session outcomes.',
+      'Dataverse audit history for changes to case and customer records.'
+    ], answer: 2,
+    explanation: 'C supplies the requested conversation outcomes and survey results. Capacity reports measure consumption, dependency traces diagnose execution, and Dataverse audits show record changes. They complement conversation analytics but do not replace its outcome definitions. Autonomous runs have a different set of health metrics.'
+  }),
+  practice({
+    id: 6, revision: 2, topic: 'Copilot in Dynamics 365', labIds: ['lab-06'], evidence: 'payables',
+    question: 'Business Central Payables Agent creates a vendor from invoice OCR, but the vendor is blocked. The supervisor wants processing to continue. What is the appropriate next step?',
+    options: [
+      'Have the supervisor confirm extracted invoice fields and resume the task.',
+      'Complete stakeholder vendor checks before an authorized user unblocks it.',
+      'Clear the vendor block after matching its name to the invoice attachment.',
+      'Complete invoice approval and treat it as approval of the new vendor.'
+    ], answer: 1,
+    explanation: 'B preserves the separate vendor-validation boundary. A validates invoice extraction, not vendor approval. C relies on the same unverified source used to create the vendor. D conflates approval of a transaction with approval of the counterparty. The agent creates new vendors blocked and does not supply vendor approval; required checks can include independent bank-detail verification.'
+  }),
+  practice({
+    id: 7, revision: 2, topic: 'Responsible AI & Security', labIds: ['lab-09', 'lab-07'], evidence: 'security',
+    question: 'A risk committee already receives cost and uptime reports. It asks whether customer-facing agent behavior remains safe after updates. Which additional scorecard best answers that question?',
+    options: [
+      'Harmful-output rates, subgroup quality gaps, and mitigation status.',
+      'Token consumption, average session duration, and license utilization.',
+      'API availability, dependency response time, and successful deployments.',
+      'User adoption, prompt-library reuse, and training-course completion.'
+    ], answer: 0,
+    explanation: 'A directly examines behavioral harm and the response to it. B is financial usage, C is infrastructure and release health, and D is adoption. All can matter operationally, but none of those three establishes safe behavior or equitable performance after a model or prompt change.'
+  }),
+  practice({
+    id: 8, revision: 2, topic: 'ALM & Environments', labIds: ['lab-08'], evidence: 'unifiedAlm',
+    question: 'One release includes a Studio agent and an X++ pricing extension. Which packaging decision avoids treating unlike deployment artifacts as interchangeable?',
+    options: [
+      'Transport both as a Dataverse solution with a common connection reference.',
+      'Use the compiled X++ runtime package alone to carry the Studio components.',
+      'Export the agent separately and rebuild the pricing change in each target.',
+      'Use a solution for Studio and the F&O ALM path for the X++ extension.'
+    ], answer: 3,
+    explanation: 'D preserves the distinct build artifacts: Studio solution components and compiled X++ output. A Dataverse solution alone does not replace an X++ build, and rebuilding targets loses reproducibility. In unified environments, a Power Platform unified package CAN contain both X++ output and Dataverse solutions for coordinated deployment. Separate artifact lifecycles do not require permanently separate release packages.'
+  }),
+  practice({
+    id: 9, revision: 2, topic: 'ALM & Environments', labIds: ['lab-08'], evidence: 'lifecycle',
+    question: 'A Studio solution calls a Foundry specialist. Either pipeline can deploy successfully on its own, but the new tool schema breaks the other side. What release control is missing?',
+    options: [
+      'A common version label assigned after each independent pipeline completes.',
+      'A shared deployment identity with contributor access on both platforms.',
+      'A compatibility gate for the paired agent and tool-contract versions.',
+      'A single repository containing every platform\'s generated deployment logs.'
+    ], answer: 2,
+    explanation: 'C checks the integration that independent pipeline success misses. Version labels and shared logs improve traceability but do not verify compatibility. A shared privileged identity broadens access without correcting the schema mismatch. Keep platform-specific pipelines and evaluate their composed behavior before promotion.'
+  }),
+  practice({
+    id: 10, revision: 2, topic: 'Copilot in Dynamics 365', labIds: ['lab-04', 'lab-06'], evidence: 'voice',
+    question: 'A Contact Center voice pilot works for clear speech but cuts off callers during pauses and cannot handle keypad input. Which change should precede wider rollout?',
+    options: [
+      'Tune turn-taking and silence handling, then test DTMF and handoff.',
+      'Tune speech recognition vocabulary and retain the current turn-end settings.',
+      'Keep the chat settings and add more written example utterances.',
+      'Switch the underlying model and retain the current telephony settings.'
+    ], answer: 0,
+    explanation: 'A targets turn-taking and keypad behavior directly. Vocabulary tuning addresses recognition errors rather than when a turn ends. Written examples omit audio conditions, and changing the model alone leaves channel settings untested. Real-time-agent documentation lists DTMF, barge-in, and voice activity detection; availability still requires separate checks.'
+  }),
+  practice({
+    id: 11, revision: 2, topic: 'Responsible AI & Security', labIds: ['lab-09'], evidence: 'governance',
+    question: 'Contracts have Purview sensitivity labels. A sponsor assumes this guarantees that all inference and logs stay in the environment\'s region. Which assessment is sound?',
+    options: [
+      'Confirm label inheritance, then accept the environment region as sufficient.',
+      'Review endpoint regions only; protected documents cannot affect log residency.',
+      'Confirm the storage geography and use it as the boundary for inference review.',
+      'Map inference, routing, and log locations independently of Purview classification.'
+    ], answer: 3,
+    explanation: 'D separates data governance from service placement. A establishes labeling, B omits logs and other processors, and C confuses storage geography with inference location. Purview labeling and supported DLP controls do not choose every model endpoint or disable flex routing. Review environment settings, feature-specific terms, inference deployment, connectors, and telemetry destinations.'
+  }),
+  practice({
+    id: 12, revision: 2, topic: 'AI Strategy & CAF', labIds: ['lab-02'], evidence: 'blueprint',
+    question: 'The enterprise is defining AI adoption priorities while a Dynamics implementation needs solution-risk reviews. How should CAF and Success by Design be assigned?',
+    options: [
+      'CAF owns Dynamics design reviews; Success by Design owns cloud landing zones.',
+      'CAF guides adoption; Success by Design guides Dynamics implementation reviews.',
+      'CAF owns both workstreams; Success by Design is reserved for post-launch support.',
+      'Success by Design owns both; CAF is reserved for infrastructure-only migrations.'
+    ], answer: 1,
+    explanation: 'B uses the frameworks at their intended levels. CAF covers AI strategy, planning, readiness, governance, security, and management. Success by Design adds Dynamics implementation guidance and risk reviews. Neither replaces the other, and Success by Design is not only a support framework.'
+  }),
+  practice({
+    id: 13, revision: 2, topic: 'Requirements & Grounding', labIds: ['lab-01', 'lab-04'], evidence: 'data',
+    question: 'Three agents answer current case-status questions from weekly CSV exports. Dataverse already owns the live cases. Which design best removes stale operational answers?',
+    options: [
+      'Consolidate the weekly exports into one shared retrieval index.',
+      'Fine-tune the response model with every weekly case-status export.',
+      'Read authorized case status from the operational system when requested.',
+      'Add export dates to prompts and let users infer whether status changed.'
+    ], answer: 2,
+    explanation: 'C aligns volatile status with the authoritative operational source and its access controls. A reduces duplication but preserves weekly staleness. B embeds changing facts in weights. D discloses staleness without meeting the current-status requirement. Retrieval and live tools should be chosen according to freshness needs.'
+  }),
+  practice({
+    id: 14, revision: 2, topic: 'ROI & Build-Buy-Extend', labIds: ['lab-03'], evidence: 'value',
+    question: 'A business case counts license savings but omits adoption training, evaluation, and ongoing knowledge maintenance. What is the material correction?',
+    options: [
+      'Compare lifecycle costs and realized benefits over a stated time horizon.',
+      'Compare subscription totals for the first year using current list prices.',
+      'Compare token spend per successful model call during the pilot period.',
+      'Compare the number of automated steps against the original process map.'
+    ], answer: 0,
+    explanation: 'A includes costs of changing and operating the process, not merely buying software. B retains the original omission; C measures only one variable cost; D is an activity proxy rather than economic value. State adoption and realization assumptions so later reviews can compare benefits against a baseline.'
+  }),
+  practice({
+    id: 15, revision: 2, topic: 'Copilot Studio Agents', labIds: ['lab-04'], evidence: 'orchestration',
+    question: 'Employees ask to check a policy and update a ticket in one turn. The standard-harness agent currently selects only one classic topic. Which design supports flexible composition?',
+    options: [
+      'Add a composite trigger phrase for each possible pair of requests.',
+      'Use a custom CLU intent for every permutation of policy and ticket.',
+      'Chain a fixed policy topic into a ticket topic for every recognized request.',
+      'Use generative orchestration over clearly described topics and tools.'
+    ], answer: 3,
+    explanation: 'D lets the planner compose reusable capabilities for multiple intents. A and B enumerate combinations and become costly to maintain. C is a valid fixed workflow, but forces the same sequence rather than selecting steps for each request. Generative planning still needs deterministic authorization and confirmation for consequential writes.'
+  }),
+  practice({
+    id: 16, revision: 2, topic: 'Copilot Studio Agents', labIds: ['lab-04'], evidence: 'language', format: 'matching',
+    question: 'Match the language-understanding approach to each existing agent\'s constraint. These are selection tradeoffs, not claims that one approach is universally superior.',
+    options: ['Built-in classic NLU', 'Custom Azure CLU integration', 'Generative orchestration'],
+    matchLabels: [
+      'A. Compose several tools and knowledge lookups from one utterance',
+      'B. Maintain a trained specialist intent model linked to Studio topics',
+      'C. Route a small stable set of intents using authored trigger phrases'
+    ], matches: { 0: 'C', 1: 'B', 2: 'A' }, answer: 0,
+    explanation: 'Classic NLU fits the small deterministic routing problem. Existing CLU integrations provide custom intents and entities but require synchronization with Studio topics. Generative orchestration composes multi-intent plans. CLU is not a substitute for a generative planner; confirm current CLU lifecycle and language support before new investment.'
+  }),
+  practice({
+    id: 17, revision: 2, topic: 'Requirements & Grounding', labIds: ['lab-01'], evidence: 'grounding',
+    question: 'A complete policy export is six months old, and its access-control metadata is missing. The pilot will answer real employees. What is the first readiness decision?',
+    options: [
+      'Accept the export after a subject expert checks ten representative answers.',
+      'Establish current policy versions and retrieval permissions before employee use.',
+      'Use the export with citations so employees can identify obsolete guidance.',
+      'Limit responses to short summaries until the access metadata is restored.'
+    ], answer: 1,
+    explanation: 'B addresses both timeliness and availability under the correct permissions. A small accuracy sample does not establish either. Citations and short summaries can still disclose unauthorized or obsolete information. The pilot may instead use synthetic or separately approved material while the real-source gaps are resolved.'
+  }),
+  practice({
+    id: 18, revision: 2, topic: 'ROI & Build-Buy-Extend', labIds: ['lab-02', 'lab-03'], evidence: 'strategy',
+    question: 'A prebuilt service assistant covers all required workflows except a warranty lookup that a supported connector can supply. The team has low-code skills and a six-week deadline. Which path fits best?',
+    options: [
+      'Build a new hosted agent to preserve control over the whole runtime.',
+      'Buy the assistant and ask users to perform every warranty lookup separately.',
+      'Extend the prebuilt assistant with the governed warranty lookup.',
+      'Train a dedicated warranty model and replace the prebuilt assistant.'
+    ], answer: 2,
+    explanation: 'C closes a bounded integration gap without rebuilding working functionality. A adds engineering and operational scope; B leaves a stated requirement unmet; D confuses access to warranty facts with a need to change model behavior. The connector still needs authorization, error handling, and fit testing.'
+  }),
+  practice({
+    id: 19, revision: 2, topic: 'Foundry & Extensibility', labIds: ['lab-02', 'lab-05'], evidence: 'fineTune', format: 'multiple',
+    question: 'A team is deciding whether to fine-tune. Which TWO findings provide the strongest justification for an evaluated customization experiment?',
+    options: [
+      'A stable classification task still fails after prompt tuning, with labeled examples available.',
+      'A compact model could meet a measured latency target using representative training examples.',
+      'Daily policy changes are missing from answers, with a maintained retrieval source available.',
+      'Answers lack newly published terminology, but improve when definitions are retrieved.'
+    ], answer: [0, 1],
+    explanation: 'A targets a persistent learned-behavior gap; B targets measurable specialization and efficiency. C calls for current retrieval, not memorization of changing policy. D already improves with retrieved definitions, so it does not yet establish a need to change weights. Fine-tuning adds training, hosting, and maintenance costs and must beat a baseline on held-out data.'
+  }),
+  practice({
+    id: 20, revision: 2, topic: 'AI Strategy & CAF', labIds: ['lab-03', 'lab-04'], evidence: 'tools',
+    question: 'Six teams share a prompt that extracts incident details. Local edits have changed its schema without notice. What should the prompt-library standard introduce?',
+    options: [
+      'A shared examples document that every team can modify independently.',
+      'A central prompt copy whose current text is loaded at runtime by all teams.',
+      'A style guide that permits each team to choose its own output fields.',
+      'Versioned contracts, named owners, and regression evidence for changes.'
+    ], answer: 3,
+    explanation: 'D makes prompt behavior a governed dependency with explicit change control. Shared examples alone do not version the contract. Loading the latest text everywhere can propagate breaking changes instantly. A style guide cannot protect schema consumers. Studio prompts support sharing and ALM; those capabilities need an operating policy.'
+  }),
+  practice({
+    id: 21, revision: 2, topic: 'Ecosystem Integration', labIds: ['lab-02', 'lab-06'], evidence: 'strategy',
+    question: 'Employees need a SharePoint policy helper inside Microsoft 365 Copilot. There are no custom workflow or runtime requirements. What is the lowest-complexity starting architecture?',
+    options: [
+      'A declarative Copilot agent grounded in the approved SharePoint content.',
+      'A hosted Foundry agent with a separate chat client and replicated index.',
+      'A custom model trained on the policies and exposed through a Teams tab.',
+      'A desktop automation agent that searches SharePoint through the browser.'
+    ], answer: 0,
+    explanation: 'A uses the existing experience and permission-aware knowledge path. B may suit custom runtime needs but introduces unnecessary hosting and replication here. C is a poor update strategy for policy facts. D automates a UI where native knowledge integration exists. Microsoft 365 agents can also have tools; they are not categorically read-only.'
+  }),
+  practice({
+    id: 22, revision: 2, topic: 'Foundry & Extensibility', labIds: ['lab-05'], evidence: 'tools',
+    question: 'A pilot must complete forms across supplier portals with no APIs. Layout changes break existing selectors, and the next action depends on visible warning banners. Preview use is approved for synthetic data. Which alternative best targets that limitation?',
+    options: [
+      'Re-record selector-based desktop flows for each current portal layout.',
+      'Use fixed screen coordinates with a separate macro for each portal.',
+      'Computer Use with a provisioned machine and bounded action permissions.',
+      'Run the existing desktop flows behind an MCP tool with the same selectors.'
+    ], answer: 2,
+    explanation: 'C can interpret visual state and is worth testing against the observed selector failures. A repairs only the current layouts; B is more sensitive to layout movement; D changes the interface to the automation without changing its brittle implementation. Computer Use is not guaranteed to succeed: test completion, recovery, permissions, and machine support before any wider use.'
+  }),
+  practice({
+    id: 23, revision: 2, topic: 'Foundry & Extensibility', labIds: ['lab-05'], evidence: 'mcp',
+    question: 'A diagnostic utility exposes MCP only over stdio on an engineer\'s laptop. A cloud-hosted Studio standard-harness agent must use it. What is required before connection?',
+    options: [
+      'Deploy the stdio server in a container and publish its service port unchanged.',
+      'Host or bridge it to reachable Streamable HTTP and review auth and policy.',
+      'Put an HTTPS reverse proxy before stdio without adapting its MCP transport.',
+      'Add an authenticated legacy SSE adapter and expose its remote endpoint.'
+    ], answer: 1,
+    explanation: 'B supplies a compatible endpoint reachable by the cloud service. Containerizing a stdio process does not create an HTTP listener; a reverse proxy alone cannot translate stdio into MCP Streamable HTTP. An SSE adapter is a real legacy pattern, but the cited Studio standard-harness page says SSE is no longer supported after August 2025. Authentication, connector data policies, and production hosting still need review.'
+  }),
+  practice({
+    id: 24, revision: 2, topic: 'Foundry & Extensibility', labIds: ['lab-05'], evidence: 'a2a',
+    question: 'A diagnostic specialist already implements A2A and owns a multi-turn workflow. Studio should delegate without recreating that workflow or building a protocol adapter. Which connection matches that contract?',
+    options: [
+      'A custom HTTP wrapper implementing conversation state around the specialist.',
+      'A Studio child agent that reimplements the specialist\'s diagnostic steps.',
+      'An MCP adapter exposing each diagnostic step as a separate callable tool.',
+      'An authenticated A2A task connection with agreed context and delegation boundaries.'
+    ], answer: 3,
+    explanation: 'D uses the existing delegation contract. A and C are implementable integration designs but require the custom adapter excluded by the stem. B duplicates a workflow that already has an owner. Review shared history, identities, task boundaries, and trace correlation; choosing A2A does not make those responsibilities disappear.'
+  }),
+  practice({
+    id: 25, revision: 2, topic: 'ROI & Build-Buy-Extend', labIds: ['lab-03', 'lab-05'], evidence: 'router',
+    question: 'Simple classifications and complex claim analyses all use the same expensive model. Which proposed optimization should the architect evaluate?',
+    options: [
+      'Route by task requirements and compare quality, cost, and tail latency.',
+      'Send every task to the cheapest model and increase retrieval depth.',
+      'Cache every answer by prompt text without considering user identity.',
+      'Shorten all model responses until monthly spending meets the budget.'
+    ], answer: 0,
+    explanation: 'A evaluates model routing against workload-specific acceptance criteria. B can sacrifice complex-task quality; C can leak user-specific responses or return stale facts; D may remove essential information while leaving model selection inefficient. Routing is not a guarantee that the smallest model is always sufficient.'
+  }),
+  practice({
+    id: 26, revision: 2, topic: 'Testing & Evaluation', labIds: ['lab-07', 'lab-04'], evidence: 'grounding',
+    question: 'An agent identifies refund questions correctly but cites a policy for the wrong country. Where should the next investigation focus?',
+    options: [
+      'The topic trigger phrases used to recognize the refund intent.',
+      'The number of retrieved passages and whether a larger top-k is needed.',
+      'The retrieval filters and policy metadata used to select evidence.',
+      'The response prompt\'s citation formatting and source-title instructions.'
+    ], answer: 2,
+    explanation: 'C targets jurisdiction selection in retrieval. A revisits an intent already recognized correctly. B may retrieve more policies but does not ensure the right country. D changes citation presentation rather than source applicability. Inspect retrieval results before changing generation; a real citation can still support the wrong policy.'
+  }),
+  practice({
+    id: 27, revision: 2, topic: 'Testing & Evaluation', labIds: ['lab-07', 'lab-06'], evidence: 'scope',
+    question: 'A service agent checks Finance invoice status before resolving a Customer Service case. Both individual connectors pass tests. Which additional test exposes cross-app failure?',
+    options: [
+      'Replay successful invoice lookups using a Finance administrator account.',
+      'Run resolution with denied invoice access and verify no false completion.',
+      'Compare the two connectors\' schemas without invoking the case workflow.',
+      'Run case-summary tests with invoice status supplied as fixed prompt text.'
+    ], answer: 1,
+    explanation: 'B exercises identity, integration failure, and final business outcome across both applications. A tests only a privileged happy path. C is a useful contract check but omits execution. D bypasses the integration. The study guide requires end-to-end multi-app scenarios; this failure case is an authored example, not a Microsoft test case.'
+  }),
+  practice({
+    id: 28, revision: 2, topic: 'ALM & Environments', labIds: ['lab-08'], evidence: 'alm',
+    question: 'Makers are ready to move a Studio prototype into a departmental production service. Which environment strategy supports reproducible releases?',
+    options: [
+      'Separate development, test, and production with solution-based promotion.',
+      'One environment with separate agent names and shared production connections.',
+      'Separate environments with manual topic recreation for each release.',
+      'A developer environment with restricted sharing and weekly exports.'
+    ], answer: 0,
+    explanation: 'A provides isolation and a repeatable transport mechanism. Naming conventions in one environment do not isolate changes or data. Manual recreation introduces drift. A developer environment is not the intended production host. Bind environment-specific values and connections, and verify settings that are not solution-aware after deployment.'
+  }),
+  practice({
+    id: 29, revision: 2, topic: 'Responsible AI & Security', labIds: ['lab-09'], evidence: 'access',
+    question: 'The conversational identity can read policy documents. Makers propose granting it write access to the same corpus so it can correct its own mistakes. What design is safer?',
+    options: [
+      'Allow writes when the agent reports high confidence in its correction.',
+      'Allow writes only during a scheduled low-traffic maintenance window.',
+      'Allow writes but retain an editable transcript of the original document.',
+      'Separate corpus stewardship from retrieval and require reviewed changes.'
+    ], answer: 3,
+    explanation: 'D separates consumption from the authority to change evidence. Confidence and quiet hours do not establish correctness or authorization. An editable transcript is neither a trustworthy audit trail nor a review gate. Use least-privilege steward roles and a controlled ingestion path for approved corrections.'
+  }),
+  practice({
+    id: 30, revision: 2, topic: 'Responsible AI & Security', labIds: ['lab-09'], evidence: 'security',
+    question: 'A red-team prompt persuades an agent to attempt a refund above its business limit. Which mitigation should enforce the limit even if the model follows the attack?',
+    options: [
+      'Repeat the refund limit in the greeting and each topic description.',
+      'Reduce model temperature and request an explanation before tool use.',
+      'Enforce authorization and amount limits in the refund execution path.',
+      'Detect the phrase "ignore instructions" and block only matching prompts.'
+    ], answer: 2,
+    explanation: 'C places the hard boundary outside model compliance. Clear instructions, generation settings, and attack detection can complement it but cannot enforce all business permissions. Phrase blocking misses paraphrases and indirect attacks. Test denied operations and log attempts without granting the model extra authority.'
+  }),
+  practice({
+    id: 31, revision: 2, topic: 'Monitor & Tune', labIds: ['lab-07'], evidence: 'lifecycle',
+    question: 'After a prompt release, the agent calls the same lookup four times per request instead of once. Quality is unchanged but cost rises. What tuning action best matches the evidence?',
+    options: [
+      'Trace duplicate calls to planner steps, revise instructions, and rerun the baseline.',
+      'Cache lookup results so repeated calls return without reaching the source.',
+      'Reduce connector retries before checking whether the repeated calls are retries.',
+      'Merge the lookup into another tool and deploy without replaying earlier cases.'
+    ], answer: 0,
+    explanation: 'A first distinguishes planner behavior from tool failures and verifies the correction. B may reduce source load but leaves redundant orchestration. C assumes retry behavior without evidence. D changes a contract without regression checks. Compare the same workload across versions and verify that necessary lookups remain.'
+  }),
+  practice({
+    id: 32, revision: 2, topic: 'Monitor & Tune', labIds: ['lab-07', 'lab-01'], evidence: 'value',
+    question: 'Users report that renewal answers cite last year\'s policy, but the aggregate satisfaction score remains high. What backlog item should be prioritized?',
+    options: [
+      'Revise the satisfaction survey to ask specifically about renewal wording.',
+      'Trace reported cases to source versions and repair the refresh process.',
+      'Add renewal phrases to the intent model while retaining the current corpus.',
+      'Tune the response style so citations appear less prominently to the user.'
+    ], answer: 1,
+    explanation: 'B turns specific feedback into a reproducible freshness investigation. Better surveys can gather evidence but do not repair the reported source. Intent phrases do not update policy facts, and de-emphasizing citations hides the problem. Add the affected cases to regression evaluation after the fix.'
+  }),
+  practice({
+    id: 33, revision: 2, topic: 'Copilot in Dynamics 365', labIds: ['lab-06'], evidence: 'help',
+    question: 'Finance users need approved PDF procedure manuals in the existing in-app help experience. Which sequence matches the documented extension path?',
+    options: [
+      'Upload the PDFs to a new standalone agent and share it with Finance users.',
+      'Upload to the F&O agent in the maker\'s default environment and publish.',
+      'Upload to the linked F&O agent and test it, leaving publication unchanged.',
+      'In the linked environment, upload to the F&O agent; wait for Ready, test, publish.'
+    ], answer: 3,
+    explanation: 'D targets the in-app agent in the associated Dataverse environment and completes the processing, testing, and publication steps. A creates a separate experience. B targets the wrong environment unless it happens to be the associated one. C validates draft behavior but does not release it. Other source types may need a custom topic; structured-data chat has separate limitations.'
+  }),
+  practice({
+    id: 34, revision: 2, topic: 'Copilot in Dynamics 365', labIds: ['lab-04', 'lab-06'], evidence: 'sales',
+    question: 'A Dynamics 365 Sales Copilot customization must quote current prices from an authenticated REST API with no ready-made connector. Which integration should the team design?',
+    options: [
+      'A knowledge-source file containing a nightly export of pricing results.',
+      'A scheduled flow that synchronizes API prices to Dataverse once per day.',
+      'A custom connector action with typed inputs and scoped authentication.',
+      'A desktop flow that reads the pricing portal through a seller\'s UI session.'
+    ], answer: 2,
+    explanation: 'C uses the available authenticated API directly. A and B are plausible replication strategies but can miss price changes between refreshes. D can read a portal but adds machine/session dependencies where a supported API exists. The cited Sales custom-topic experience is preview; verify eligibility, licensing, permissions, and error handling before production use.'
+  }),
+  practice({
+    id: 35, revision: 2, topic: 'Testing & Evaluation', labIds: ['lab-07', 'lab-05'], evidence: 'fineTune', format: 'multiple',
+    question: 'A tuned classifier improves training accuracy. Which TWO checks are essential before deciding whether it replaces the production model?',
+    options: [
+      'Score the training examples again using the production evaluation rubric.',
+      'Compare training-set loss across epochs to select the lowest-loss run.',
+      'Score held-out, representative cases against the production baseline.',
+      'Evaluate harmful failures and performance on important task subgroups.'
+    ], answer: [2, 3],
+    explanation: 'C tests generalization and relative value; D checks consequential failures hidden by averages. A reuses examples seen in training and cannot establish generalization. B helps select training runs but may reward overfitting. Release criteria should also cover operational requirements such as latency and cost; training accuracy alone is insufficient.'
+  }),
+  practice({
+    id: 36, revision: 2, topic: 'AI Strategy & CAF', labIds: ['lab-02', 'lab-09'], evidence: 'governance', format: 'matching',
+    question: 'A steering group assigns responsibilities across adoption, delivery, and security. Match each framework or product family to its principal role.',
+    options: ['Microsoft Purview', 'Success by Design', 'Microsoft Defender', 'Cloud Adoption Framework'],
+    matchLabels: [
+      'A. Enterprise cloud and AI adoption strategy and readiness',
+      'B. Dynamics implementation reviews and solution-risk guidance',
+      'C. Data classification, supported DLP policies, and compliance evidence',
+      'D. Threat detection and protection across supported workloads'
+    ], matches: { 0: 'C', 1: 'B', 2: 'D', 3: 'A' }, answer: 0,
+    explanation: 'The assignments distinguish strategy, implementation, data governance, and threat protection. Purview is not an inference-region selector; residency still needs service and routing controls. Defender coverage depends on the deployed product and workload. CAF and Success by Design are complementary guidance, not runtime security products.'
+  }),
+  practice({
+    id: 37, revision: 2, topic: 'Responsible AI & Security', labIds: ['lab-09', 'lab-04'], evidence: 'autonomous', format: 'multiple',
+    question: 'An invoice agent starts from inbound mail and can propose payments. Which TWO controls address both untrusted triggering and consequential execution?',
+    options: [
+      'Validate the incoming event and constrain which invoices enter the workflow.',
+      'Increase the model\'s confidence threshold for recognizing vendor names.',
+      'Retain all mailbox attachments indefinitely for possible future diagnosis.',
+      'Require the designated payment authority before any funds are released.'
+    ], answer: [0, 3],
+    explanation: 'A reduces spoofed or out-of-scope triggers; D enforces human authority over payment. A confidence threshold cannot authenticate mail or authorize funds. Indefinite retention is not trigger validation and may conflict with data policy. These are design controls for the hypothetical agent, not a claim that Payables Agent supplies payment approval flows.'
+  }),
+  practice({
+    id: 38, revision: 2, topic: 'Requirements & Grounding', labIds: ['lab-01'], evidence: 'data',
+    question: 'A forecasting team needs years of cases for analysis, while a service agent needs current case status. How should the shared data estate serve both without overloading the transactional app?',
+    options: [
+      'Point both workloads at unrestricted full-table operational queries.',
+      'Use governed analytical data for forecasting and live access for status.',
+      'Move both workloads onto the monthly analytical snapshot for consistency.',
+      'Create a separate editable case spreadsheet for each consuming team.'
+    ], answer: 1,
+    explanation: 'B separates analytical and operational access patterns while retaining ownership and governed lineage. A risks transactional performance and excess access. C cannot meet live-status freshness. D creates competing sources of truth. Shared governance does not mean every workload must use the same physical store or refresh cadence.'
+  }),
+  practice({
+    id: 39, revision: 2, topic: 'AI Strategy & CAF', labIds: ['lab-02', 'lab-03'], evidence: 'strategy',
+    question: 'A sponsor describes an agentic-first program as "put chat on every form." Which initial deliverable would instead make the program accountable to business outcomes?',
+    options: [
+      'A rollout calendar listing every form and its intended chat launch date.',
+      'A reusable visual component that gives each form the same chat interface.',
+      'A ranked process portfolio with outcome baselines and accountable owners.',
+      'A catalog of candidate models sorted by their maximum context windows.'
+    ], answer: 2,
+    explanation: 'C starts with measurable business problems and ownership before interface or model choices. A and B can support delivery once a use case is justified. D helps technical selection later. Chat placement is not evidence that a business process benefits from an agent or that the organization can govern it.'
+  }),
+  practice({
+    id: 40, revision: 2, topic: 'AI Strategy & CAF', labIds: ['lab-02'], evidence: 'strategy',
+    question: 'A company has many AI experiments but no support capability or secure environment baseline. CAF planning identifies one valuable pilot. What should follow before scaling it?',
+    options: [
+      'Complete departmental pilot plans and defer shared operations until expansion.',
+      'Reserve model capacity and treat quota availability as the scaling readiness gate.',
+      'Promote the prototype and fund governance after usage establishes demand.',
+      'Establish readiness, security, governance, and operational responsibilities.'
+    ], answer: 3,
+    explanation: 'D closes the stated operational and security readiness gaps. A organizes pilots but defers shared support. B secures capacity, not operational readiness. C promotes before establishing governance. CAF treats governance, security, and management as continuing responsibilities rather than launch paperwork.'
+  }),
+  practice({
+    id: 41, revision: 2, topic: 'Requirements & Grounding', labIds: ['lab-01'], evidence: 'strategy',
+    question: 'A request asks for AI to calculate contractual late fees from a fixed formula. Inputs are structured and the same inputs must always produce the same amount. What should own the calculation?',
+    options: [
+      'A generative prompt with the formula and several worked examples.',
+      'A deterministic business rule, with AI limited to explanation if useful.',
+      'A fine-tuned model trained on all previously assessed late fees.',
+      'A reasoning agent that chooses a calculation method for each invoice.'
+    ], answer: 1,
+    explanation: 'B meets the repeatability requirement without unnecessary model uncertainty. Examples and training do not turn language generation into a guaranteed calculator. Choosing a method per invoice violates the fixed contract. AI can explain a computed fee, but the authoritative amount should come from validated business logic.'
+  }),
+  practice({
+    id: 42, revision: 2, topic: 'Requirements & Grounding', labIds: ['lab-01', 'lab-04'], evidence: 'grounding',
+    question: 'Search retrieves the right maintenance manuals, but OCR split table rows and repeated page headers obscure torque values. Which preparation change addresses this failure?',
+    options: [
+      'Preserve table structure and remove repeated noise before indexing.',
+      'Increase the number of retrieved pages without changing their parsing.',
+      'Increase chunk overlap while retaining the current OCR text representation.',
+      'Switch embedding models and rebuild the index from the same parsed text.'
+    ], answer: 0,
+    explanation: 'A repairs the damaged evidence representation. B retrieves more of the same damaged material. C can preserve context across chunk boundaries but cannot restore lost table relationships. D changes retrieval encoding rather than parsing. Validate torque values against the originals and retain provenance before testing retrieval again.'
+  }),
+  practice({
+    id: 43, revision: 2, topic: 'Requirements & Grounding', labIds: ['lab-01', 'lab-06'], evidence: 'data',
+    question: 'Two authorized agents consume a customer-data API. A schema change silently changes "balance" from euros to cents. What data contract should prevent this class of error?',
+    options: [
+      'A JSON type schema that declares balance numeric but leaves units implicit.',
+      'A longer field description added only to the agents\' system prompts.',
+      'A versioned schema defining units, meaning, owners, and compatibility.',
+      'A consumer-side heuristic that divides unusually large balances by one hundred.'
+    ], answer: 2,
+    explanation: 'C makes semantics and compatibility explicit at the producer-consumer boundary. A validates type but accepts both euros and cents. B can drift from the API contract. D confuses legitimately large balances with a unit change. Current records can still be wrong for the consumer when their meaning changes silently.'
+  }),
+  practice({
+    id: 44, revision: 2, topic: 'Copilot Studio Agents', labIds: ['lab-04', 'lab-08'], evidence: 'wa',
+    question: 'An intelligent Power Apps workload is fast and secure but difficult to use and has no recovery runbook. How should a Power Platform Well-Architected review assess it?',
+    options: [
+      'Accept the design because security and performance are the release pillars.',
+      'Apply Azure\'s cost pillar in place of usability to complete the assessment.',
+      'Review only the model, since the surrounding app is already on Power Platform.',
+      'Assess all five pillars, including usability, recovery, and operational ownership.'
+    ], answer: 3,
+    explanation: 'D includes Reliability, Security, Operational Excellence, Performance Efficiency, and Experience Optimization. Recovery and usability are workload concerns even when platform services work. Power Platform has Experience Optimization, not a standalone Cost Optimization pillar. The review covers the app, people, and operations as well as the model.'
+  }),
+  practice({
+    id: 45, revision: 2, topic: 'AI Strategy & CAF', labIds: ['lab-02', 'lab-05'], evidence: 'a2a',
+    question: 'HR and procurement specialists have separate owners, release schedules, and permitted data. An employee front door must delegate without merging those responsibilities. What boundary belongs in the architecture?',
+    options: [
+      'One shared administrator identity and one combined specialist prompt.',
+      'Explicit delegation contracts with separate permissions and ownership.',
+      'A shared conversation log used as the only state store for all agents.',
+      'Identical tool permissions so any specialist can finish any delegated task.'
+    ], answer: 1,
+    explanation: 'B preserves specialist responsibilities while allowing coordination. Shared administration and identical permissions erase least-privilege boundaries. A common log is useful for correlation only when access is controlled; it is not a task-ownership contract. Validate what context crosses each boundary and which agent owns completion or escalation.'
+  }),
+  practice({
+    id: 46, revision: 2, topic: 'Ecosystem Integration', labIds: ['lab-04', 'lab-06'], evidence: 'pages',
+    question: 'Developers need an AI-generated model-driven app page over Dataverse. They require local TypeScript/React review and deployment through the supported solution workflow, without operating a separate web host. Which approach fits?',
+    options: [
+      'Create a generative page with AI code tools, then review and deploy it.',
+      'Build a Power Fx custom page in the designer and include it in a solution.',
+      'Generate a standalone React app and embed its hosted URL in the app.',
+      'Generate a React web resource and manage its page integration manually.'
+    ], answer: 0,
+    explanation: 'A meets the requested authoring and deployment contract. B is a legitimate low-code custom-page approach but not local TypeScript/React authoring. C requires a separate host. D can deliver custom UI but leaves page integration to the team rather than using the supported generative-page workflow. Review the generated code, Dataverse access, accessibility, and behavior before publishing.'
+  }),
+  practice({
+    id: 47, revision: 2, topic: 'AI Strategy & CAF', labIds: ['lab-03'], evidence: 'strategy',
+    question: 'Every department invents its own risk rubric and support model. The AI Center of Excellence must improve consistency without becoming the owner of every business process. Which model fits?',
+    options: [
+      'Centralize every prompt edit and business approval in the CoE delivery team.',
+      'Leave all standards local and collect only quarterly adoption statistics.',
+      'Publish shared controls and evaluation standards with local accountable owners.',
+      'Standardize on one model and let its supplier own operational risk decisions.'
+    ], answer: 2,
+    explanation: 'C combines common governance with business accountability. A creates an unnecessary central delivery bottleneck, B preserves inconsistent controls, and D mistakes technical standardization for risk ownership. The CoE should support reuse, enablement, review, and escalation rather than remove responsibility from process owners.'
+  }),
+  practice({
+    id: 48, revision: 2, topic: 'ROI & Build-Buy-Extend', labIds: ['lab-03'], evidence: 'roi',
+    question: 'An agent handles 12,000 eligible cases yearly and saves 6 minutes on each. Labor is valued at $40/hour and all saved time is realized as value. Year-one implementation plus operating cost is $32,000. Using (benefit - cost) / cost, what is year-one ROI?',
+    options: ['$48,000 benefit; 150% ROI.', '$16,000 benefit; 50% ROI.', '$48,000 benefit; 33.3% ROI.', '$48,000 benefit; 50% ROI.'], answer: 3,
+    explanation: 'D: 12,000 x 6 / 60 = 1,200 hours; 1,200 x $40 = $48,000. Net benefit is $16,000, so ROI is $16,000 / $32,000 = 50%. A divides gross benefit by cost, B calls net benefit gross benefit, and C divides net benefit by gross benefit. These are hypothetical values, not product savings claims.'
+  }),
+  practice({
+    id: 49, revision: 2, topic: 'ROI & Build-Buy-Extend', labIds: ['lab-03'], evidence: 'roi',
+    question: 'Implementation costs $60,000 upfront. From month one, an agent realizes $15,000 in monthly benefit and costs $5,000 monthly to operate. Ignoring discounting and taxes, when is simple payback?',
+    options: ['At month 4, using $15,000 monthly benefit.', 'At month 6, using $10,000 monthly net benefit.', 'At month 12, using $5,000 monthly operating cost.', 'At month 3, using $20,000 monthly combined value.'], answer: 1,
+    explanation: 'B: monthly net benefit is $15,000 - $5,000 = $10,000; $60,000 / $10,000 = six months. A ignores operating expense, C treats expense as benefit, and D adds cost instead of subtracting it. A delayed adoption ramp would change this result, but the stem explicitly assumes immediate realization.'
+  }),
+  practice({
+    id: 50, revision: 2, topic: 'ROI & Build-Buy-Extend', labIds: ['lab-03'], evidence: 'roi',
+    question: 'A proposed router sends 8,000 simple requests at $0.01 each and 2,000 complex requests at $0.06 each. Routing adds $20 monthly. All-direct traffic would cost $0.06 per request. Quality is held equal. What is the monthly saving?',
+    options: ['$380 saved: $600 baseline less $220 routed cost.', '$400 saved: $600 baseline less $200 routed cost.', '$480 saved: $600 baseline less $120 routed cost.', '$580 saved: $600 baseline less $20 routed cost.'], answer: 0,
+    explanation: 'A: the baseline is 10,000 x $0.06 = $600. Routed inference costs $80 + $120, plus $20 overhead, totaling $220. B omits routing overhead, C omits simple requests and overhead, and D omits all inference. The prices and equal-quality assumption are fictional; a real router decision needs evaluation and current pricing.'
+  }),
+  practice({
+    id: 51, revision: 2, topic: 'Ecosystem Integration', labIds: ['lab-04', 'lab-06'], evidence: 'feed',
+    question: 'In an approved preview pilot, a model-driven app must show agent work awaiting human help separately from completed work. Which design matches the current agent feed?',
+    options: [
+      'Publish the agent to Teams and show its conversation transcript in the app.',
+      'Write agent messages into the case timeline and mark each case as pending.',
+      'Connect the supervised agent to Power Apps MCP and use its task-based agent feed.',
+      'Enable the legacy activity feed and log all work as completed chat sessions.'
+    ], answer: 2,
+    explanation: 'C uses the documented supervision surface: the agent must use the Power Apps MCP server and be supervised in the app. Chat transcripts and case timelines are not the same task lifecycle; the older activity-based feed has been replaced. This is preview, English-only, and region-dependent. Users with Agent Task access can see feed items, so do not assume private per-user tasks.'
+  }),
+  practice({
+    id: 52, revision: 2, topic: 'Foundry & Extensibility', labIds: ['lab-04', 'lab-05'], evidence: 'documents',
+    question: 'An invoice workflow needs standard header and line-item extraction with field confidence scores. The team wants to evaluate a ready-made invoice schema before labeling data or maintaining custom extraction logic. What is the best baseline?',
+    options: [
+      'Train a custom document model using labeled invoices from each supplier.',
+      'Combine a layout extractor with rules that map text spans into invoice fields.',
+      'Build an OCR and language-model pipeline with a custom confidence estimator.',
+      'Document Intelligence with a suitable prebuilt invoice model.'
+    ], answer: 3,
+    explanation: 'D gives the requested prebuilt baseline and field-confidence output. A can address specialized fields but requires labeling. B adds extraction-rule maintenance. C provides flexibility at the cost of custom orchestration and confidence calibration. Other managed analyzers may also merit evaluation; this choice is not a guarantee of accuracy on every supplier format.'
+  }),
+  practice({
+    id: 53, revision: 2, topic: 'Copilot Studio Agents', labIds: ['lab-04'], evidence: 'tools',
+    question: 'An agent must extract claimants and their repair shops into a fixed JSON schema from long reports. Ordinary conversational answers are inconsistent. Which component gives the most direct control?',
+    options: [
+      'A prompt action with explicit inputs, relationships, and output schema.',
+      'A longer tool description asking the orchestrator to keep answers tidy.',
+      'A response formatter that parses claimant and shop names from generated prose.',
+      'A rule-based parser that pairs each claimant with the nearest shop mention.'
+    ], answer: 0,
+    explanation: 'A directly controls relationship extraction and the output contract at generation time. B gives only general formatting guidance. C can reshape prose but cannot reliably repair omitted or incorrect relationships. D assumes textual proximity implies ownership, which narrative reports need not follow. Validate JSON and handle missing or ambiguous relationships explicitly.'
+  }),
+  practice({
+    id: 54, revision: 2, topic: 'Copilot Studio Agents', labIds: ['lab-04'], evidence: 'language',
+    question: 'A user says "cancel it" after discussing both a service appointment and an order. The agent cannot determine which object is intended. Which fallback is appropriate?',
+    options: [
+      'Cancel the object mentioned most recently and offer an undo afterward.',
+      'Ask which object they mean before invoking either cancellation tool.',
+      'Search the knowledge base for a general cancellation policy and end.',
+      'Route to an operator immediately without attempting a clarifying question.'
+    ], answer: 1,
+    explanation: 'B resolves a simple referent ambiguity without acting or requiring an operator. A guesses consent; C gives policy rather than resolving intent; D is a safe fallback if clarification fails but is premature here. Escalate when the user cannot clarify or policy requires human intervention.'
+  }),
+  practice({
+    id: 55, revision: 2, topic: 'Copilot Studio Agents', labIds: ['lab-04'], evidence: 'ai',
+    question: 'A canvas app captures an inspection and uses AI to draft a work order. The inspector remains accountable for the submitted order. Where should the generated result enter the process?',
+    options: [
+      'As a final submitted record once the prompt returns valid-looking text.',
+      'As a separate chat message that is not linked to the inspection record.',
+      'As a queued order submitted automatically unless the inspector rejects it.',
+      'As an editable draft linked to the inspection and explicitly confirmed.'
+    ], answer: 3,
+    explanation: 'D preserves the inspector\'s explicit decision and the inspection link. A confuses output validity with approval. B loses process context. C treats inaction as approval rather than a confirmed submission. Use defined inputs, validation, and a controlled write action; generation should not implicitly authorize the order.'
+  }),
+  practice({
+    id: 56, revision: 2, topic: 'Foundry & Extensibility', labIds: ['lab-04', 'lab-05'], evidence: 'foundryTools', format: 'multiple',
+    question: 'A support solution needs interim transcripts while callers speak and category-specific harm-severity scores for the resulting text. It must use managed speech and safety capabilities. Which TWO configurations meet those requirements?',
+    options: [
+      'Use Speech batch transcription on uploaded recordings for the live captions.',
+      'Use Content Safety text analysis with thresholds for each harm category.',
+      'Use Speech real-time transcription to receive interim recognition results.',
+      'Use a profanity blocklist as the sole source of the text\'s harm-severity score.'
+    ], answer: [1, 2],
+    explanation: 'B supplies category-level severity results; C provides live recognition including interim results. A is useful for asynchronous analysis of completed recordings but not live captions. D can catch listed terms but cannot substitute for contextual harm-category scoring. Validate language support, transcription errors, thresholds, and latency; moderation is not a guarantee of safety.'
+  }),
+  practice({
+    id: 57, revision: 2, topic: 'Foundry & Extensibility', labIds: ['lab-05', 'lab-09'], evidence: 'reasoning',
+    question: 'A standard-harness Studio pilot has one difficult supplier-comparison step and several simple lookups. Deep reasoning preview is approved for synthetic data. Which design controls latency and exposure?',
+    options: [
+      'Enable reasoning for every step to keep all model behavior consistent.',
+      'Apply reasoning to the comparison step and measure its added latency.',
+      'Use reasoning for each supplier lookup and a standard model for comparison.',
+      'Split the comparison across several reasoning steps before measuring latency.'
+    ], answer: 1,
+    explanation: 'B places reasoning where the stated analytical difficulty lies and measures its cost. A applies it unnecessarily to routine work; C targets lookups rather than comparison; D assumes extra reasoning stages help before benchmarking them. The feature requires generative orchestration and reasoning enabled. It is preview with no residency commitment, so sensitive-data or production use needs a separate eligibility decision.'
+  }),
+  practice({
+    id: 58, revision: 2, topic: 'Foundry & Extensibility', labIds: ['lab-05'], evidence: 'tools',
+    question: 'A stable desktop form has reliable selectors and fixed rules. Processing speed matters, an RPA team owns it, and only GA features are allowed. What is the better starting point?',
+    options: [
+      'A Computer Use agent that interprets the form visually for each transaction.',
+      'A new browser-automation script maintained outside the existing RPA team.',
+      'A Power Automate desktop flow using the existing RPA operating model.',
+      'An attended desktop flow requiring an operator to start every transaction.'
+    ], answer: 2,
+    explanation: 'C fits stable, high-volume, rule-based automation with an established team. The cited comparison recommends RPA for GA-only scenarios. A adds visual-model variability and an eligibility issue. B assumes a browser-accessible interface and creates a second support stack. D adds operator dependence to each transaction. Computer Use is not automatically preferable whenever an API is absent.'
+  }),
+  practice({
+    id: 59, revision: 2, topic: 'Foundry & Extensibility', labIds: ['lab-05'], evidence: 'a2a',
+    question: 'One Studio agent needs a current-stock lookup from a supplier\'s stable REST API. There is no shared tool catalog or specialist workflow requirement. Which initial integration has the least unnecessary infrastructure?',
+    options: [
+      'A custom connector or HTTP tool for the stock lookup.',
+      'A custom A2A agent that wraps the stock API as a delegated task.',
+      'A hosted MCP server that publishes the stock lookup for agent discovery.',
+      'A scheduled API export feeding a searchable index of stock snapshots.'
+    ], answer: 0,
+    explanation: 'A meets the single-agent, stable-API need directly. B and C are implementable and may suit delegation or a shared catalog, but add hosting and lifecycle work not justified here. D introduces snapshot staleness. The point is proportional integration, not a claim that MCP or A2A could never wrap this API.'
+  }),
+  practice({
+    id: 60, revision: 2, topic: 'Copilot in Dynamics 365', labIds: ['lab-06'], evidence: 'fnoData',
+    question: 'An approved F&O structured-data chat preview must ground answers in inventory quantities that users are authorized to see. The team wants the supported structured knowledge-source path rather than document snapshots. What should it configure?',
+    options: [
+      'Export inventory reports nightly and upload them as agent knowledge files.',
+      'Index warehouse dashboards as pages through a separate knowledge connector.',
+      'Build an HTTP lookup topic instead of configuring a structured knowledge source.',
+      'Configure supported F&O virtual entities or synchronized Dataverse tables.'
+    ], answer: 3,
+    explanation: 'D uses the documented structured-data chat preview path. A and B convert operational data into snapshots with their own freshness and access-control concerns. C is a valid custom integration option but not the requested knowledge-source configuration. Verify entity support and any synchronization latency; older help-and-guidance documentation has different virtual-entity limitations.'
+  }),
+  practice({
+    id: 61, revision: 2, topic: 'Ecosystem Integration', labIds: ['lab-06'], evidence: 'salesSetup',
+    question: 'Sales agent is installed, but sellers cannot query their new custom CRM table. Admins have not added it to Sales Chat configuration. What should be checked first?',
+    options: [
+      'Add the table to Forms settings and refresh the seller-facing form layout.',
+      'Add terminology mappings while retaining the current Sales Chat table list.',
+      'Configured CRM entities, search indexing, and the user\'s privileges.',
+      'Reinstall the Sales agent app while retaining its environment configuration.'
+    ], answer: 2,
+    explanation: 'C addresses the missing query configuration, indexing, and permissions. Forms settings and Sales Chat configuration can be managed independently; adding a form is not sufficient. Terminology mappings improve interpretation but do not replace the required table configuration. Reinstalling the app leaves the missing environment settings unchanged.'
+  }),
+  practice({
+    id: 62, revision: 2, topic: 'Ecosystem Integration', labIds: ['lab-04', 'lab-06'], evidence: 'tools',
+    question: 'A Power Platform team needs one reusable summarization prompt in both a flow and an agent. It does not need another conversational persona. What should it manage as the reusable asset?',
+    options: [
+      'A separate agent for each caller with identical copied instructions.',
+      'A library prompt with parameters, permissions, and solution lifecycle.',
+      'Separate inline prompts in each caller with changes synchronized by convention.',
+      'A custom model endpoint with a new wrapper service owned by the app team.'
+    ], answer: 1,
+    explanation: 'B manages the prompt as the reusable platform asset. A duplicates conversational agents unnecessarily. C relies on manual synchronization and risks drift. D can support specialized runtime needs but adds a service lifecycle absent from this requirement. AI hub/AI Builder and Studio UI names can change; validate the supported caller bindings and permissions.'
+  }),
+  practice({
+    id: 63, revision: 2, topic: 'Ecosystem Integration', labIds: ['lab-06'], evidence: 'data',
+    question: 'Customer Service and Finance both have a customer named Northwind, but their identifiers and legal-entity scopes differ. What should the integration contract establish before an agent joins records?',
+    options: [
+      'An authoritative identity mapping including legal entity and record ownership.',
+      'A fuzzy-name rule that accepts the first matching customer in each app.',
+      'A shared display-name convention with no change to the existing identifiers.',
+      'A model instruction to choose the customer with the most recent activity.'
+    ], answer: 0,
+    explanation: 'A prevents a plausible but incorrect cross-app join. Names and recency are not stable identity keys, especially across legal entities. A display-name convention does not resolve ambiguous historical data. The contract should also state which system owns each field and how missing or conflicting mappings are handled.'
+  }),
+  practice({
+    id: 64, revision: 2, topic: 'Monitor & Tune', labIds: ['lab-07'], evidence: 'value',
+    question: 'Thousands of feedback comments make manual triage slow. The team wants AI-assisted discovery of recurring unmet requests, not just another volume chart. Which use of analytics fits?',
+    options: [
+      'Rank agents by total sessions and prioritize the most popular agent.',
+      'Rank negative-sentiment scores and treat their order as the topic backlog.',
+      'Summarize only positive reactions to establish successful topic patterns.',
+      'Cluster question themes, inspect examples, and turn gaps into test cases.'
+    ], answer: 3,
+    explanation: 'D groups unmet requests into reviewable themes and regression cases. A ranks popularity, not gaps. B helps prioritize dissatisfaction but does not identify what capability is missing. C excludes the failures being investigated. Check feature availability and inspect clustered examples; AI-assigned themes are not proven root causes.'
+  }),
+  practice({
+    id: 65, revision: 2, topic: 'Monitor & Tune', labIds: ['lab-07'], evidence: 'value',
+    question: 'CSAT is 4.8/5, but only 2% of sessions have survey responses and escalated users rarely respond. What is the most defensible interpretation?',
+    options: [
+      'The agent meets its quality target because the average exceeds 4.5.',
+      'Survey response rate can substitute for unresolved-session measurement.',
+      'The respondents are satisfied; inspect nonresponse and outcome cohorts.',
+      'The score is unusable, so remove CSAT from all operational reporting.'
+    ], answer: 2,
+    explanation: 'C respects what the measure actually samples. A generalizes a selected group to all users. B confuses participation with resolution. D discards useful but limited evidence. Compare resolution, escalation, abandonment, and sampled case quality alongside the survey rather than claiming causal or population-wide success.'
+  }),
+  practice({
+    id: 66, revision: 2, topic: 'Monitor & Tune', labIds: ['lab-07'], evidence: 'lifecycle',
+    question: 'Median response time is 2 seconds, but p95 rose from 8 to 25 seconds after a connector change. What should the operator investigate first?',
+    options: [
+      'Dependency spans and retries in the slow requests, grouped by version.',
+      'Average response length across all requests, ignoring the slow cohort.',
+      'Model token usage aggregated by day across all deployed agent versions.',
+      'Connector uptime and successful-call counts for the full reporting period.'
+    ], answer: 0,
+    explanation: 'A isolates slow requests and their dependencies by version. B and C can show workload shifts but aggregate away the slow cohort. D measures availability and volume rather than time spent inside successful requests. A healthy median or uptime percentage can hide poor tail latency. Reproduce under representative concurrency before tuning.'
+  }),
+  practice({
+    id: 67, revision: 2, topic: 'Monitor & Tune', labIds: ['lab-07'], evidence: 'value', format: 'multiple',
+    question: 'A chat front door and an event-triggered fulfillment agent share a dashboard. Which TWO metric definitions preserve the distinction between their operating modes?',
+    options: [
+      'Combine chat sessions and scheduled runs into one resolution-rate denominator.',
+      'Track resolved, escalated, and abandoned outcomes for engaged chat sessions.',
+      'Track trigger execution and tool success for event-driven fulfillment runs.',
+      'Treat every successful HTTP response as proof that the user\'s problem was resolved.'
+    ], answer: [1, 2],
+    explanation: 'B uses conversation outcomes; C uses autonomous execution signals. A combines unlike populations and obscures changes in traffic mix. D confuses transport success with business completion. Report metric denominators and operating mode separately so increased scheduled activity cannot conceal poor conversational resolution.'
+  }),
+  practice({
+    id: 68, revision: 2, topic: 'Testing & Evaluation', labIds: ['lab-07'], evidence: 'evaluation',
+    question: 'A test judges an answer correct only when it exactly matches one sentence. It rejects accurate paraphrases of policy. Which evaluation change preserves factual rigor?',
+    options: [
+      'Require the expected policy keywords without scoring how they are related.',
+      'Score required policy meaning against references and inspect disputed paraphrases.',
+      'Lower the text-similarity threshold globally until the paraphrases pass.',
+      'Enumerate accepted paraphrases and retain exact matching as the only grader.'
+    ], answer: 1,
+    explanation: 'B evaluates the required meaning and retains review for disputed cases. A can accept negated or incorrectly related policy terms. C may also admit substantive errors. D works for a finite output vocabulary but is brittle for open-ended language. Exact matching remains useful for strict codes or mandatory field values.'
+  }),
+  practice({
+    id: 69, revision: 2, topic: 'Testing & Evaluation', labIds: ['lab-07', 'lab-09'], evidence: 'evaluation', format: 'multiple',
+    question: 'A Studio agent passes its answer-quality test set. Before a sensitive launch, which TWO additional checks address risks that those scores do not establish?',
+    options: [
+      'Test adversarial prompts and perform a separate responsible AI review.',
+      'Expand answer-quality cases while keeping the same fully privileged test identity.',
+      'Repeat representative functional cases to estimate variation in their quality scores.',
+      'Test unauthorized retrieval and privileged tool calls under restricted identities.'
+    ], answer: [0, 3],
+    explanation: 'A and D assess safety and access boundaries. B can improve functional coverage but cannot establish restricted-user behavior. C measures functional variation, not the missing safety or permission controls. Studio evaluation does not replace responsible AI review and filters. Keep functional tests and add targeted negative-path evidence.'
+  }),
+  practice({
+    id: 70, revision: 2, topic: 'Testing & Evaluation', labIds: ['lab-07'], evidence: 'evaluation',
+    question: 'Copilot generates regression cases from current knowledge. Several expected answers repeat a mistake in that knowledge. How should the team use the generated suite?',
+    options: [
+      'Publish it unchanged because generation ensures alignment with the corpus.',
+      'Regenerate expectations with a second model using the same unchecked knowledge.',
+      'Keep only cases on which the agent and generated expected answer already agree.',
+      'Have policy owners correct expectations, retain useful cases, and add missing risks.'
+    ], answer: 3,
+    explanation: 'D retains AI drafting while validating the test oracle independently. A preserves known source errors. B changes the generator without correcting its evidence. C filters for agreement and can retain shared mistakes while excluding useful failures. Add risk and negative cases before making the suite a release gate.'
+  }),
+  practice({
+    id: 71, revision: 2, topic: 'Testing & Evaluation', labIds: ['lab-07', 'lab-06'], evidence: 'orchestration',
+    question: 'A case-resolution flow creates a Finance adjustment, then times out before returning confirmation. The agent may retry. Which test best checks business integrity?',
+    options: [
+      'Verify that the client receives one success response after its retry completes.',
+      'Verify that the first HTTP call returned a success code before timeout.',
+      'Replay the request and verify a single adjustment using a stable operation key.',
+      'Increase the timeout until the normal demonstration no longer fails.'
+    ], answer: 2,
+    explanation: 'C checks persisted side effects after an ambiguous result. A single client confirmation can still conceal two adjustments. B does not establish what the retry does. D can reduce failures but does not test recovery. Stable operation keys and deduplication are application responsibilities, not an automatic guarantee of generative orchestration.'
+  }),
+  practice({
+    id: 72, revision: 2, topic: 'Testing & Evaluation', labIds: ['lab-04', 'lab-07'], evidence: 'tools',
+    question: 'A prompt generates shipping instructions from a typed order input. Which prompt change most improves validation without expanding its authority?',
+    options: [
+      'Specify required output fields and an explicit missing-input response.',
+      'Provide several complete examples but leave missing-input behavior unspecified.',
+      'Constrain output to valid JSON without defining required business fields.',
+      'Supply default shipping values for any field absent from the order input.'
+    ], answer: 0,
+    explanation: 'A defines both business completeness and the incomplete-input path. B illustrates success but leaves a critical failure case open. C guarantees syntax, not required meaning. D can silently turn missing facts into incorrect instructions unless those defaults are explicitly authorized. Test incomplete and conflicting inputs as well as normal orders.'
+  }),
+  practice({
+    id: 73, revision: 2, topic: 'ALM & Environments', labIds: ['lab-08'], evidence: 'alm',
+    question: 'A solution import succeeds in test, but the agent still uses the development API URL and lacks production-style channel security. Which checklist approach addresses both configuration gaps?',
+    options: [
+      'Reimport the managed solution with overwrite enabled for its components.',
+      'Configure environment bindings and separately review post-deployment settings.',
+      'Rebind connection references and rely on the import for channel settings.',
+      'Configure channel security and retain the exported development API values.'
+    ], answer: 1,
+    explanation: 'B distinguishes environment bindings from settings requiring explicit post-deployment work. A does not make non-solution-aware settings travel. C repairs connections but assumes channel security transfers; D repairs channel security but retains the wrong endpoint. The ALM guidance also identifies authentication, sharing, and Application Insights as post-deployment considerations.'
+  }),
+  practice({
+    id: 74, revision: 2, topic: 'ALM & Environments', labIds: ['lab-08', 'lab-06'], evidence: 'sales',
+    question: 'A team customizes a Sales Copilot topic in an approved preview environment and must reproduce it in test. Which release practice fits the documented customization path?',
+    options: [
+      'Edit the topic directly in test so it binds automatically to test data.',
+      'Copy the prompt text only, because topic dependencies remain tenant-wide.',
+      'Export the topic alone and recreate its connector bindings manually in test.',
+      'Manage the customization in a solution and validate target dependencies.'
+    ], answer: 3,
+    explanation: 'D follows the Sales customization guidance and preserves dependency-aware promotion. A creates target drift, B omits dependencies, and C splits the release into a partial artifact plus manual reconstruction. Confirm target roles, connections, consumption billing, and preview eligibility rather than assuming import makes the feature production-ready.'
+  }),
+  practice({
+    id: 75, revision: 2, topic: 'ALM & Environments', labIds: ['lab-08', 'lab-09'], evidence: 'lifecycle',
+    question: 'A Foundry Agent Application can be invoked, but its identity-authenticated storage tool fails after publication. Storage logs show a valid token with the expected audience and a new principal ID lacking blob-read permission. What should the release owner correct?',
+    options: [
+      'Grant blob-read access to the published agent identity at the required scope.',
+      'Grant the application caller the Foundry role needed to invoke the endpoint.',
+      'Grant additional storage data permissions to the shared project identity.',
+      'Change the tool token audience to the URL of the storage-facing MCP server.'
+    ], answer: 0,
+    explanation: 'A addresses the principal identified in the denied storage request. B fixes caller-to-agent authorization, which already succeeds. C grants access to the development identity rather than the published principal. D would break the already correct downstream audience. This question uses the Agent Application publishing model; its identity transition must not be assumed for newer publishing models without checking their documentation.'
+  }),
+  practice({
+    id: 76, revision: 2, topic: 'ALM & Environments', labIds: ['lab-08'], evidence: 'audit',
+    question: 'The same prompt version gives different answers after the retrieval index is rebuilt. Auditors need to reproduce the earlier result. What release evidence is missing?',
+    options: [
+      'A deployment manifest containing prompts and models but no data versions.',
+      'A snapshot of source documents without the parsing or indexing configuration.',
+      'Versioned corpus, transformation, index, model, and evaluation references.',
+      'A retrieval trace with document IDs that resolve only to their latest versions.'
+    ], answer: 2,
+    explanation: 'C identifies the data and configuration dependencies needed to reconstruct the earlier evidence path. A omits changed data; B omits transformations; D loses historical content when documents change. Retain approved snapshots or reproducible references under retention policy. Reconstruction supports comparison but does not guarantee byte-identical generative output.'
+  }),
+  practice({
+    id: 77, revision: 2, topic: 'ALM & Environments', labIds: ['lab-08', 'lab-05'], evidence: 'modelAlm',
+    question: 'A fine-tuned model artifact passed evaluation and was deployed. The next training run overwrites the artifact at the same path. What change is needed for dependable rollback?',
+    options: [
+      'Keep a mutable production alias and record each training run\'s identifier.',
+      'Retain immutable model versions and record which deployment uses each one.',
+      'Retain only the latest training notebook because it can regenerate the weights.',
+      'Retain evaluation reports and retrain a replacement if rollback is requested.'
+    ], answer: 1,
+    explanation: 'B preserves the exact evaluated artifact and its deployment association. A records names without retaining the old weights. C and D depend on retraining, which can take time and produce a different result. Pair immutable model artifacts with dataset, dependency, and evaluation evidence throughout the lifecycle.'
+  }),
+  practice({
+    id: 78, revision: 2, topic: 'Responsible AI & Security', labIds: ['lab-09', 'lab-04'], evidence: 'security',
+    question: 'A retrieved supplier PDF contains instructions to email internal pricing to an outside address. The employee\'s question was legitimate. What boundary should the agent enforce?',
+    options: [
+      'Treat the PDF instructions as authoritative because retrieval selected it.',
+      'Allow document-requested actions when the supplier domain is allowlisted.',
+      'Rely on malicious-phrase filtering as the only check before invoking tools.',
+      'Treat retrieved text as evidence, not authority to invoke an outbound action.'
+    ], answer: 3,
+    explanation: 'D separates retrieved evidence from authority to act. A mistakes retrieval relevance for trust. B treats supplier allowlisting as authorization for internal actions. C misses novel or obfuscated instructions and is not an execution boundary. Combine source handling with destination controls, least privilege, inspection, and logging.'
+  }),
+  practice({
+    id: 79, revision: 2, topic: 'Responsible AI & Security', labIds: ['lab-09', 'lab-08'], evidence: 'audit',
+    question: 'An investigation asks who approved a model change and which dataset it used. The team has full chat transcripts but no change records. What should the audit design add?',
+    options: [
+      'Deployment success events containing the endpoint name but no dataset version.',
+      'Training lineage records without a link to the production release approval.',
+      'Attributable change events with artifact versions, approvals, and timestamps.',
+      'Approval tickets referencing a mutable model alias rather than a versioned artifact.'
+    ], answer: 2,
+    explanation: 'C connects the approved release to attributable changes and dataset versions. A lacks data lineage, B lacks production authorization, and D can resolve to a different artifact after the alias changes. Protect audit integrity, retention, and access; prefer necessary metadata over copying sensitive customer content.'
+  }),
+  practice({
+    id: 80, revision: 2, topic: 'Responsible AI & Security', labIds: ['lab-09'], evidence: 'residency',
+    question: 'An EU-hosted environment has flex routing enabled. Legal requires inference to remain within the EU Data Boundary even at peak load. What must the architect address?',
+    options: [
+      'Disable flex routing and validate every relevant feature\'s processing path.',
+      'Apply a confidential sensitivity label and leave routing settings unchanged.',
+      'Confirm the database region and treat model processing as the same location.',
+      'Retain flex routing because encryption makes processing location immaterial.'
+    ], answer: 0,
+    explanation: 'A addresses the setting that permits outside-boundary inference and associated pseudonymized data handling during peak demand. Labels, database placement, and encryption do not satisfy a geographic processing requirement by themselves. Review other services and feature-specific commitments as well; switching a setting cannot reverse prior data movement.'
+  }),
+  practice({
+    id: 81, revision: 2, topic: 'Responsible AI & Security', labIds: ['lab-09', 'lab-07'], evidence: 'security',
+    question: 'A service prioritization model has acceptable overall accuracy but disproportionately misses urgent requests in one language. What should the responsible AI review require?',
+    options: [
+      'Raise the global confidence threshold and accept the aggregate score.',
+      'Evaluate the affected cohort, remediate the gap, and reassess impact.',
+      'Translate the affected requests and release without validating translation errors.',
+      'Tune one global decision threshold using the existing majority-heavy dataset.'
+    ], answer: 1,
+    explanation: 'B investigates the affected cohort and validates remediation. A may increase misses. Translation in C can be useful but needs its own validation. D can optimize the majority while preserving the gap. Use representative, lawfully handled data and human oversight for urgent cases while the limitation is unresolved.'
+  }),
+  practice({
+    id: 82, revision: 2, topic: 'Responsible AI & Security', labIds: ['lab-09', 'lab-08'], evidence: 'security', format: 'multiple',
+    question: 'An agent unexpectedly invokes a privileged export tool. The incident owner needs containment and evidence preservation. Which TWO actions should be in the response plan?',
+    options: [
+      'Restrict the implicated tool identity or access path while assessing impact.',
+      'Rotate the tool credential and restore the same access scope before triage.',
+      'Preserve protected traces and correlate the request with configuration changes.',
+      'Revert the last prompt change and resume exports without reviewing tool access.'
+    ], answer: [0, 2],
+    explanation: 'A limits further impact; C preserves evidence for investigation. B may help a stolen-credential incident but restores the same privileges before establishing the cause. D assumes a prompt rollback fixes the authorization exposure. Coordinate containment with operations and use a safe fallback while investigating.'
+  }),
+  practice({
+    id: 83, revision: 2, topic: 'Testing & Evaluation', labIds: ['lab-07'], evidence: 'lifecycle', format: 'matching',
+    question: 'A release review has four kinds of evidence. Match each to the question it can answer most directly.',
+    options: ['Dependency trace', 'Held-out answer evaluation', 'Versioned approval record', 'User outcome survey'],
+    matchLabels: [
+      'A. Did representative responses satisfy the defined task criteria?',
+      'B. Who authorized this particular production configuration change?',
+      'C. Which tool call consumed most of the slow request\'s execution time?',
+      'D. How did responding users perceive the assistance they received?'
+    ], matches: { 0: 'C', 1: 'A', 2: 'B', 3: 'D' }, answer: 0,
+    explanation: 'Traces diagnose execution, evaluations compare outputs to criteria, approval records establish authorization, and surveys capture perceptions. None substitutes for all the others: a fast request can be wrong, an approved release can regress, and a positive survey does not prove compliance or causal business value.'
+  }),
+  practice({
+    id: 84, revision: 2, topic: 'Requirements & Grounding', labIds: ['lab-01'], evidence: 'strategy',
+    originSource: c1756('lab-01-qualify-the-process-and-grounding-data.md'),
+    question: 'The accelerator workshop has two candidates: frequent password-status queries with approved data, and rare legal exceptions with unresolved ownership. Which pilot choice has the stronger readiness case?',
+    options: [
+      'Choose legal exceptions because their complexity demonstrates more advanced AI.',
+      'Combine both so the pilot measures a broader range of autonomous capabilities.',
+      'Choose whichever team can provide the largest collection of historical text.',
+      'Start with the frequent bounded queries and qualify legal exceptions separately.'
+    ], answer: 3,
+    explanation: 'D balances value, frequency, scope, and readiness. Complexity is not a benefit by itself; merging cases inherits unresolved risk; data volume does not establish permission or ownership. This is an authored workshop decision inspired by the existing Lab 1 association, not a reproduced courseware answer.'
+  }),
+  practice({
+    id: 85, revision: 2, topic: 'Requirements & Grounding', labIds: ['lab-01'], evidence: 'grounding',
+    originSource: c1756('lab-01-qualify-the-process-and-grounding-data.md'),
+    question: 'Two current, authorized manuals disagree on the warranty period. Both pass freshness and access checks. What should the data-readiness register require next?',
+    options: [
+      'Index both and let similarity ranking determine which period is authoritative.',
+      'Ask the accountable policy owner to resolve precedence and record the decision.',
+      'Prefer the service-team manual over the legal-team manual based on its audience.',
+      'Treat the most recently modified document as authoritative without an owner decision.'
+    ], answer: 1,
+    explanation: 'B resolves conflicting authority, not merely freshness or permissions. Retrieval ranking measures relevance. Intended audience does not establish policy precedence, and a recent file edit need not indicate a policy change. Record the approved source and precedence rule before allowing definitive warranty answers.'
+  }),
+  practice({
+    id: 86, revision: 2, topic: 'AI Strategy & CAF', labIds: ['lab-02', 'lab-05'], evidence: 'a2a',
+    originSource: c1756('lab-02-choose-the-platform-and-agent-boundaries.md'),
+    question: 'Two specialists each delegate an unresolved request back to the other. The front door never returns an outcome. What should the boundary map specify?',
+    options: [
+      'A terminal owner with a task-wide delegation budget and an unresolved-task handoff.',
+      'A retry budget per tool call that resets when control moves to the other agent.',
+      'A shared conversation store without a rule assigning final task responsibility.',
+      'A timeout per specialist that restarts whenever it receives a delegated request.'
+    ], answer: 0,
+    explanation: 'A bounds the overall task and assigns responsibility for its unresolved outcome. B and D reset local limits across delegation, allowing a cycle to continue. C preserves history but does not define termination or ownership. The implementation must enforce these rules; A2A connectivity alone does not guarantee a terminating workflow.'
+  }),
+  practice({
+    id: 87, revision: 2, topic: 'AI Strategy & CAF', labIds: ['lab-02', 'lab-05'], evidence: 'lifecycle',
+    originSource: c1756('lab-02-choose-the-platform-and-agent-boundaries.md'),
+    question: 'The accelerator now needs a specialist with custom runtime libraries that its low-code boundary cannot provide. The front door still fits Studio. Which architecture revision is proportionate?',
+    options: [
+      'Migrate every conversation and connector to the specialist\'s new runtime.',
+      'Replicate the required libraries in low-code flows and replace the specialist logic.',
+      'Add a code-hosted specialist and revise the contract and ownership record.',
+      'Expose low-level library calls as tools and move specialist control into Studio.'
+    ], answer: 2,
+    explanation: 'C preserves the working front door and hosts the specialist where its libraries can run. A expands migration scope. B reimplements library behavior in a constrained environment. D can work but moves specialist coordination into Studio and creates a more granular integration contract. Evaluate hosting, identity, tools, and support before accepting the new boundary.'
+  }),
+  practice({
+    id: 88, revision: 2, topic: 'ROI & Build-Buy-Extend', labIds: ['lab-03'], evidence: 'roi',
+    originSource: c1756('lab-03-build-the-value-case-and-ai-operating-model.md'),
+    question: 'The accelerator saves 1,000 staff hours at $50/hour, but only 40% can be redeployed to funded work. Annual operating cost is $12,000. There are no other costs or benefits in this comparison. What realized net value should finance record?',
+    options: ['$38,000: $50,000 potential value less operating cost.', '$50,000: all saved hours valued at the staff rate.', '$20,000: the redeployable portion before operating cost.', '$8,000: $20,000 realized value less operating cost.'], answer: 3,
+    explanation: 'D separates potential time value from realization: 1,000 x $50 x 40% = $20,000; minus $12,000 = $8,000. A assumes full realization, B also omits cost, and C omits cost after applying the realization factor. Saved hours are not automatically cash savings; the stem specifies redeployment value.'
+  }),
+  practice({
+    id: 89, revision: 2, topic: 'Copilot Studio Agents', labIds: ['lab-04', 'lab-09'], evidence: 'orchestration',
+    originSource: c1756('lab-04-design-the-core-agent-grounding-and-prompt-contracts.md'),
+    question: 'A supervisor approves a drafted case update. Before execution, the case changes and the draft now targets the wrong resolution state. What should the write contract enforce?',
+    options: [
+      'Revalidate the record version and approved payload before applying the update.',
+      'Apply the current draft because any earlier supervisor approval covers the case.',
+      'Ask the model to merge changes silently so the conversation remains uninterrupted.',
+      'Check that the case ID still exists and apply the previously approved field values.'
+    ], answer: 0,
+    explanation: 'A binds approval to the actual operation and checks concurrent changes. B treats earlier approval as sufficient despite changed state. C can produce an unapproved payload. D confirms identity but not version or valid state transition. Enforce concurrency and approval checks in the action layer, not just in prompt instructions.'
+  }),
+  practice({
+    id: 90, revision: 2, topic: 'Foundry & Extensibility', labIds: ['lab-05'], evidence: 'tools',
+    originSource: c1756('lab-05-design-multi-agent-mcp-and-computer-use-extensibility.md'),
+    question: 'The extensibility map contains a stdio warranty utility, an A2A specialist, and a changing UI-only portal. Which plan respects their different prerequisites?',
+    options: [
+      'Host SSE MCP; use the A2A specialist; pilot Computer Use on a managed machine.',
+      'Host or bridge authenticated Streamable HTTP MCP; use A2A; pilot bounded Computer Use.',
+      'Host Streamable HTTP MCP; rebuild the specialist as tools; script fixed portal coordinates.',
+      'Host Streamable HTTP MCP; use A2A; approve the portal after desktop-only happy-path tests.'
+    ], answer: 1,
+    explanation: 'B combines compatible MCP hosting, existing A2A delegation, and a bounded UI pilot. A chooses legacy SSE unsupported by the cited Studio path. C needlessly reimplements the specialist and uses brittle coordinates. D approves a changing portal without failure-path or representative UI testing. Review authentication, DLP, context sharing, and machine support for the complete path.'
+  }),
+  practice({
+    id: 91, revision: 2, topic: 'Ecosystem Integration', labIds: ['lab-06'], evidence: 'strategy', format: 'multiple',
+    originSource: c1756('lab-06-map-dynamics-365-power-platform-and-microsoft-365-integration.md'),
+    question: 'The accelerator exposes case actions through Microsoft 365 and Studio. Which TWO integration rules preserve consistent business ownership across those experiences?',
+    options: [
+      'Let each channel maintain a writable case copy to avoid contention in the source system.',
+      'Keep Dataverse as the case authority and carry stable case identifiers through actions.',
+      'Apply write validation in each channel UI and trust requests reaching the shared service.',
+      'Enforce case permissions and business validation at the write service for every caller.'
+    ], answer: [1, 3],
+    explanation: 'B and D preserve one authority and enforce the same constraints for every entry point. A creates conflicting writable copies. C makes security depend on each client behaving correctly and can be bypassed by another caller. Microsoft 365 agents can expose actions, so their write paths also require service-side authorization and validation.'
+  }),
+  practice({
+    id: 92, revision: 2, topic: 'Testing & Evaluation', labIds: ['lab-07'], evidence: 'evaluation',
+    originSource: c1756('lab-07-create-the-evaluation-telemetry-and-tuning-plan.md'),
+    question: 'A release scores 98% overall, exceeding the 95% target, but fails the explicitly mandatory "never disclose another customer\'s case" test. What should the release decision be?',
+    options: [
+      'Release because the overall score already includes the failed access test.',
+      'Release to a small cohort and monitor disclosures while preparing the fix.',
+      'Hold release until the mandatory boundary failure is fixed and retested.',
+      'Remove the rare case from the suite and document it as an unsupported query.'
+    ], answer: 2,
+    explanation: 'C respects the mandatory privacy boundary. A offsets a prohibited failure with unrelated successes. B limits exposure but still violates the stated gate. D relabels the query without removing the accessible failure path. A staged rollout can manage residual risk only after mandatory controls are satisfied or formally changed by authorized owners.'
+  }),
+  practice({
+    id: 93, revision: 2, topic: 'Monitor & Tune', labIds: ['lab-07'], evidence: 'alm',
+    originSource: c1756('lab-07-create-the-evaluation-telemetry-and-tuning-plan.md'),
+    question: 'A Studio tool fails only in test after credential rotation. Its connection reference still selects the old connection; a replacement connection passes a direct API check. The agent and flow versions match the approved release. What should operations do next?',
+    options: [
+      'Reimport the approved solution and retain its existing connection bindings.',
+      'Rotate the app secret again and retest the replacement connection directly.',
+      'Roll back the agent and flow versions while retaining the current bindings.',
+      'Rebind test, validate the full tool path, and reconcile failures before replay.'
+    ], answer: 3,
+    explanation: 'D corrects the environment-specific reference and tests the path the agent actually uses. A reimports code without correcting the retained binding. B revalidates a connection that already works but is not selected. C changes approved artifacts while leaving the cause intact. Reconcile partially completed work before replaying failed scenarios, then monitor the affected environment.'
+  }),
+  practice({
+    id: 94, revision: 2, topic: 'ALM & Environments', labIds: ['lab-08'], evidence: 'alm',
+    originSource: c1756('lab-08-design-alm-environments-and-operational-ownership.md'),
+    question: 'The release engineer is unavailable during a production agent incident. The RACI names no operations owner or rollback authority. What must the operating model add?',
+    options: [
+      'An incident owner with tested recovery and delegated rollback authority.',
+      'A rule that the original maker must approve every incident action in person.',
+      'An on-call rota with diagnostic access but no authority to change the deployment.',
+      'Automated rollback for model latency alerts without an owner for other incidents.'
+    ], answer: 0,
+    explanation: 'A couples accountable ownership, authority, and tested recovery. B leaves a single-person dependency. C supplies responders who cannot execute recovery. D handles one failure class without assigning responsibility for others. Recovery also needs communication, escalation, and data-integrity checks.'
+  }),
+  practice({
+    id: 95, revision: 2, topic: 'Responsible AI & Security', labIds: ['lab-09'], evidence: 'governance',
+    originSource: c1756('lab-09-complete-the-security-responsible-ai-and-governance-record.md'),
+    question: 'The governance record covers the model endpoint but omits a third-party tool\'s transcript retention and processing locations. Legal approval is still required. What closes the gap?',
+    options: [
+      'Reuse the model provider\'s compliance statement for the third-party tool.',
+      'Document and approve the tool\'s data flows, retention, and access controls.',
+      'Review the tool\'s encryption controls and defer its retention terms to procurement.',
+      'Proceed because customer data is encrypted when sent to the tool endpoint.'
+    ], answer: 1,
+    explanation: 'B covers the actual downstream processor. A assumes another provider\'s commitments apply. C separates procurement from an unresolved architectural retention requirement. D addresses transport security but not processing location or retention. Keep the release unapproved until required evidence and accountable acceptance exist.'
+  }),
+  practice({
+    id: 96, revision: 2, topic: 'Ecosystem Integration', labIds: ['lab-06'], evidence: 'service',
+    question: 'A representative uses Service Agent in standalone Microsoft 365 Copilot, with access to two Customer Service environments and no active app record. A case lookup resolves in the wrong environment. Which setting should be corrected first?',
+    options: [
+      'The default environment selected in the Power Apps maker portal.',
+      'The queue assignment used to route cases in Customer Service.',
+      'The Customer Service environment selected for this session under Sources.',
+      'The case table\'s quick-find configuration in the intended environment.'
+    ], answer: 2,
+    explanation: 'C selects the connection whose Customer Service records are queried in this session. A is a maker-portal selection, B routes work within Customer Service, and D influences finding records after the environment is selected. None substitutes for the Service Agent source connection. With no active app context, explicitly identify the intended source and case.'
+  }),
+  practice({
+    id: 97, revision: 2, topic: 'Copilot Studio Agents', labIds: ['lab-04'], evidence: 'flows',
+    question: 'An agent collects purchase-request details. Validation, approval, and record creation must then follow an authored order. Which component should execute that repeatable sequence?',
+    options: [
+      'An agent flow with explicit validation, approval, and connector steps.',
+      'A planner instruction allowing the model to choose the approval order.',
+      'Separate validation and write tools whose order is chosen by the planner.',
+      'Parallel validation and approval branches that each trigger record creation.'
+    ], answer: 0,
+    explanation: 'A enforces the authored order and can include human approval. B and C leave sequencing to dynamic planning. D permits creation from independent branches rather than after all prerequisites. A deterministic flow structure does not make AI content within it deterministic; validate that content before consequential steps.'
+  }),
+  practice({
+    id: 98, revision: 2, topic: 'ALM & Environments', labIds: ['lab-08', 'lab-04'], evidence: 'pagesAlm',
+    question: 'A generative page created during preview is absent from a model-driven app solution export. The team also expects its full authoring conversation in test. What should the release plan recognize?',
+    options: [
+      'The page must be recreated manually because generative pages are not solution-aware.',
+      'Export unmanaged instead of managed so the full authoring chat travels with the page.',
+      'The sitemap is optional because generative-page dependencies are always included.',
+      'Migrate the page and include dependencies; only published code and first prompt transfer.'
+    ], answer: 3,
+    explanation: 'D reflects the current page ALM documentation. Preview-created pages may need a one-time designer migration, and sitemap/UX Agent Project dependencies must be included. A denies supported solution transport. B confuses editable packaging with authoring-history export; neither package type transfers the full conversation. C ignores dependencies. Keep separate source history when required.'
+  }),
+  practice({
+    id: 99, revision: 2, topic: 'Foundry & Extensibility', labIds: ['lab-04', 'lab-05'], evidence: 'documents',
+    question: 'A claims intake pilot must extract a common schema from narrative letters, images, and recorded explanations. Fields may need inference, and labeled templates are unavailable. Which managed approach should be evaluated first?',
+    options: [
+      'Label template variants and train a custom Document Intelligence model.',
+      'Content Understanding analyzers for schema-based multimodal extraction.',
+      'Assemble OCR, speech transcription, and custom LLM extraction pipelines.',
+      'Use document layout extraction followed by hand-maintained field rules.'
+    ], answer: 1,
+    explanation: 'B is the managed starting point for multimodal, schema-driven extraction with inferred fields. A introduces labeling and does not cover the audio path by itself. C can meet the requirement but adds custom orchestration before evaluating a managed fit. D suits stable layouts better than variable narrative and audio. Evaluate accuracy and API-version eligibility rather than assuming all features are production-ready.'
+  }),
+  practice({
+    id: 100, revision: 2, topic: 'Copilot Studio Agents', labIds: ['lab-04', 'lab-08'], evidence: 'wa',
+    question: 'A Power Apps agent waits indefinitely when its diagnostic service is unavailable. Operators want both predictable recovery and a usable experience. Which design best balances those Well-Architected concerns?',
+    options: [
+      'Retry until the service recovers and hide the status to avoid alarming users.',
+      'Return the last cached diagnosis without checking its age or applicability.',
+      'Bound retries, preserve the request, and offer a clear human fallback.',
+      'End the request immediately and require users to re-enter all captured details.'
+    ], answer: 2,
+    explanation: 'C combines Reliability and Experience Optimization with a recoverable request. A leaves the user waiting and can overload the dependency. B uses a legitimate caching pattern without the validity checks needed for this diagnosis. D forces unnecessary re-entry. Set limits from workload requirements and test the degraded path.'
+  }),
+  practice({
+    id: 101, revision: 2, topic: 'Responsible AI & Security', labIds: ['lab-09', 'lab-06'], evidence: 'feed',
+    question: 'An agent feed preview pilot proposes putting confidential employee salary corrections in tasks addressed to individual managers. Why is this design unsafe without a different protected workflow?',
+    options: [
+      'Task-table access can expose feed items beyond the named manager.',
+      'The manager must be made the task owner before recipient filtering is enforced.',
+      'The related employee record\'s permissions automatically govern the task text.',
+      'The app\'s manager-only filtered view provides the missing access boundary.'
+    ], answer: 0,
+    explanation: 'A matches the documented preview warning about Agent Task access. B assumes task ownership supplies recipient-level isolation. C assumes permissions propagate from a related record to copied task text. D confuses a filtered view with authorization. None is a documented substitute for the missing privacy boundary; use a protected workflow and recheck future access-model changes.'
+  })
+];
